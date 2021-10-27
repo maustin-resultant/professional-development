@@ -99,3 +99,48 @@
 	
                                                     # /*\ FULL, SEMI, AND ANTI JOINS /*\
 
+# Start with inventory_parts_joined table
+  inventory_parts_joined %>%
+  
+# Combine with the sets table 
+    	inner_join(sets, by = "set_num") %>%
+    
+# Combine with the themes table 
+    	inner_join(themes, by = c("theme_id" = "id"), suffix = c("_set", "_theme"))
+	
+# Count the part number and color id, weight by quantity
+  batman %>%
+    	count(part_num, color_id, wt = quantity)
+
+  star_wars %>%
+    	count(part_num, color_id, wt = quantity)
+	
+# Combine the star_wars_parts table 
+  batman_parts %>%
+	full_join(star_wars_parts, by = c("part_num", "color_id"), suffix = c("_batman", "_star_wars")) %>%
+  
+# Replace NAs with 0s in the n_batman and n_star_wars columns 
+  	replace_na(list(n_batman = 0, n_star_wars = 0))
+	
+# Sort the number of star wars pieces in descending order 
+  parts_joined %>%
+    	arrange(desc(n_star_wars)) %>%
+
+# Join the colors table to the parts_joined table
+    	inner_join(colors, by = c("color_id" = "id")) %>%
+
+# Join the parts table to the previous join 
+    	inner_join(parts, by = ("part_num"), suffix = c("_color", "_part"))
+	
+# Filter the batwing set for parts that are also in the batmobile set
+  batwing %>%
+    	semi_join(batmobile, by = ("part_num"))
+
+# Filter the batwing set for parts that aren't in the batmobile set
+  batwing %>%
+    	anti_join(batmobile, by = ("part_num"))
+	
+# Use inventory_parts to find colors included in at least one set
+  colors %>%
+    	semi_join(inventory_parts, by = c("id" = "color_id"))
+	
