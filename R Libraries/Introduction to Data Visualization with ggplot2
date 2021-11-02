@@ -116,3 +116,136 @@ plt_mpg_vs_wt <- ggplot(mtcars, aes(wt, mpg))
   plt_mpg_vs_fcyl_by_fam + 
       geom_point(position = position_jitterdodge(jitter.width = 0.3, dodge.width = 0.3))
       
+# Set the fill color to datacamp_light_blue
+  datacamp_light_blue <- "#51A8C9"
+      ggplot(mtcars, aes(mpg, ..density..)) +
+      geom_histogram(binwidth = 1, fill = datacamp_light_blue)
+      
+# Change the position to identity, with transparency 0.4
+  ggplot(mtcars, aes(mpg, fill = fam)) +
+      geom_histogram(binwidth = 1, position = "identity", alpha = 0.4)
+      
+# Using economics, plot unemploy vs. date
+  head(economics)
+      ggplot(economics, aes(date, unemploy)) +
+      geom_line()
+      
+# Plot the Rainbow Salmon time series
+  ggplot(fish.species, aes(x = Year, y = Rainbow)) +
+      geom_line()
+
+# Plot the Pink Salmon time series
+  ggplot(fish.species, aes(x = Year, y = Pink)) +
+      geom_line()
+
+# Plot multiple time-series by grouping by species
+  ggplot(fish.tidy, aes(Year, Capture)) +
+      geom_line(aes(group = Species))
+
+# Plot multiple time-series by coloring by species
+  ggplot(fish.tidy, aes(Year, Capture, color = Species)) +
+      geom_line(aes(group = Species))
+      
+                                                              # /*\ THEMES /*\
+
+# Changing and setting theme elements
+  plt_prop_unemployed_over_time +
+      theme(
+        rect = element_rect(fill = "grey92"),
+        legend.key = element_rect(color = NA),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        panel.grid.major.y = element_line(
+          color = "white",
+          size = 0.5,
+          linetype = "dotted"
+      ),
+      axis.text = element_text(color = "grey25"),
+      plot.title = element_text(face = "italic", size = 16)
+    )
+    
+# Set the axis tick length to 2 lines
+  plt_mpg_vs_wt_by_cyl +
+      theme(
+        axis.ticks.length = unit(2, "lines")
+      )
+      
+# Set the legend margin to (20, 30, 40, 50) points
+  plt_mpg_vs_wt_by_cyl +
+      theme(
+        legend.margin = margin(20, 30, 40, 50, "pt")
+      )
+      
+# Theme layer saved as an object, theme_recession
+  theme_recession <- theme(
+      rect = element_rect(fill = "grey92"),
+      legend.key = element_rect(color = NA),
+      axis.ticks = element_blank(),
+      panel.grid = element_blank(),
+      panel.grid.major.y = element_line(color = "white", size = 0.5, linetype = "dotted"),
+      axis.text = element_text(color = "grey25"),
+      plot.title = element_text(face = "italic", size = 16),
+      legend.position = c(0.6, 0.1)
+  )
+
+# Combine the Tufte theme with theme_recession
+  theme_tufte_recession <- theme_tufte() + theme_recession
+
+# Add the recession theme to the plot
+  plt_prop_unemployed_over_time + theme_tufte_recession
+  
+# Changing and setting theme elements
+  plt_prop_unemployed_over_time +
+      theme_tufte() +
+        theme(
+          legend.position = "none",
+          axis.ticks = element_blank(),
+          axis.title = element_text(color = "grey60"),
+          axis.text = element_text(color = "grey60"),
+          panel.grid.major.y = element_line(
+            color = "grey60",
+            size = 0.25,
+            linetype = "dotted"
+        )
+  )
+  
+# Add a geom_segment() layer
+  ggplot(gm2007, aes(x = lifeExp, y = country, color = lifeExp)) +
+      geom_point(size = 4) +
+      geom_segment(aes(xend = 30, yend = country), size = 2)
+      
+# Set the color scale
+palette <- brewer.pal(5, "RdYlBu")[-(2:4)]
+
+# Add a title and caption
+  ggplot(gm2007, aes(x = lifeExp, y = country, color = lifeExp)) +
+      geom_point(size = 4) +
+      geom_segment(aes(xend = 30, yend = country), size = 2) +
+      geom_text(aes(label = round(lifeExp,1)), color = "white", size = 1.5) +
+      scale_x_continuous("", expand = c(0,0), limits = c(30,90), position = "top") +
+      scale_color_gradientn(colors = palette) +
+      labs(title = "Highest and lowest life expectancies, 2007", caption = "Source: gapminder")
+      
+# Add text
+  plt_country_vs_lifeExp +
+      step_1_themes +
+      geom_vline(xintercept = global_mean, color = "grey40", linetype = 3) +
+      annotate(
+        "text",
+        x = x_start, y = y_start,
+        label = "The\nglobal\naverage",
+        vjust = 1, size = 3, color = "grey40"
+        )
+  
+# Add a curve
+  plt_country_vs_lifeExp +
+      step_1_themes +
+      geom_vline(xintercept = global_mean, color = "grey40", linetype = 3) +
+      step_3_annotation +
+      annotate(
+        "curve",
+        x = x_start, y = y_start,
+        xend = x_end, yend = y_end,
+        arrow = arrow(length = unit(0.2, "cm"), type = "closed"),
+        color = "grey40"
+        )
