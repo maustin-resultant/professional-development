@@ -1,0 +1,79 @@
+                                                        # /*\ STATISTICS /*\
+
+# Amend the plot to add a smooth layer, use the default LOESS model to fit the curve
+  ggplot(mtcars, aes(x = wt, y = mpg)) +
+      geom_point() +
+      geom_smooth()
+      
+# Amend the plot. Use lin. reg. smoothing; turn off std err ribbon
+  ggplot(mtcars, aes(x = wt, y = mpg)) +
+      geom_point() +
+      geom_smooth(method = "lm", se = FALSE)
+      
+# Amend the plot. Swap geom_smooth() for stat_smooth().
+  ggplot(mtcars, aes(x = wt, y = mpg)) +
+      geom_point() +
+      stat_smooth(method = "lm", se = FALSE)
+      
+# Using mtcars, plot mpg vs. wt, colored by fcyl; Add a point layer; Add a smooth lin reg stat, no ribbon
+  ggplot(mtcars, aes(wt, mpg, color = fcyl)) +
+      geom_point() +
+      stat_smooth(method = "lm", se = FALSE)
+      
+# Amend the plot to add another smooth layer with dummy grouping
+  ggplot(mtcars, aes(x = wt, y = mpg, color = fcyl)) +
+      geom_point() +
+      stat_smooth(method = "lm", se = FALSE) +
+      stat_smooth(aes(group = 1), method = "lm", se = FALSE)
+      
+# Add 3 smooth LOESS stats, varying span & color
+  ggplot(mtcars, aes(x = wt, y = mpg)) +
+      geom_point() +
+      stat_smooth(color = "red", se = FALSE, span = 0.9) +
+      stat_smooth(color = "green", se = FALSE, span = 0.6) +
+      stat_smooth(color = "blue", se = FALSE, span = 0.3)
+      
+# Amend the plot to color by fcyl; Add a smooth LOESS stat, no ribbon; Add a smooth lin. reg. stat, no ribbon
+  ggplot(mtcars, aes(x = wt, y = mpg, color = fcyl)) +
+      geom_point() +
+      stat_smooth(se = FALSE) +
+      stat_smooth(method = "lm", se = FALSE)
+      
+# Map color to dummy variable "All"
+  ggplot(mtcars, aes(x = wt, y = mpg, color = fcyl)) +
+      geom_point() +
+      stat_smooth(se = FALSE, aes(color = "All")) +
+      stat_smooth(method = "lm", se = FALSE)
+      
+# Add jittered points with transparency 0.25; Add a smooth lin. reg. line (with ribbon)
+  ggplot(Vocab, aes(education, vocabulary, color = year_group)) +
+      geom_jitter(alpha = 0.25) +
+      stat_smooth(method = "lm")
+      
+# Map the fill color to year_group, set the line size to 2
+  ggplot(Vocab, aes(x = education, y = vocabulary, color = year_group)) +
+      geom_jitter(alpha = 0.25) +
+      stat_smooth(method = "lm", aes(fill = year_group), size = 2)
+      
+# Add a quantile stat, at 0.05, 0.5, and 0.95
+  ggplot(Vocab, aes(x = education, y = vocabulary)) +
+      geom_jitter(alpha = 0.25) +
+      stat_quantile(quantiles = c(0.05, 0.5, 0.95))
+      
+# Add a size scale, from 1 to 10
+  ggplot(Vocab, aes(x = education, y = vocabulary)) +
+      stat_sum() +
+      scale_size(range = c(1, 10))
+      
+# Add a summary stat of std deviation limits
+  p_wt_vs_fcyl_by_fam_jit +
+      stat_summary(fun.data = mean_sdl, fun.args = list(mult = 1), position = posn_d)
+      
+# Change the geom to be an errorbar
+  p_wt_vs_fcyl_by_fam_jit +
+      stat_summary(geom = "errorbar", fun.data = mean_sdl, fun.args = list(mult = 1), position = posn_d)
+      
+# Add a summary stat of normal confidence limits
+  p_wt_vs_fcyl_by_fam_jit +
+      stat_summary(fun.data = mean_cl_normal, position = posn_d)
+      
