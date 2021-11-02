@@ -55,3 +55,64 @@
 # Edit this to map color to clarity and assign the updated plot to a new object
   plt_price_vs_carat_by_clarity <- plt_price_vs_carat + geom_point(aes(color = clarity))
       plt_price_vs_carat_by_clarity
+
+                                                              # /*\ AESTHETICS /*\
+
+# Map x to mpg and y to fcyl
+  ggplot(mtcars, aes(mpg, fcyl)) +
+      geom_point()
+      
+# Set the shape and size of the points
+  ggplot(mtcars, aes(wt, mpg, color = fcyl)) +
+      geom_point(shape = 1, size = 4)
+      
+# Base layer
+  plt_mpg_vs_wt <- ggplot(mtcars, aes(wt, mpg))
+
+# Map fcyl to alpha, not size
+  plt_mpg_vs_wt +
+      geom_point(aes(size = fcyl))
+      
+# Base layer
+plt_mpg_vs_wt <- ggplot(mtcars, aes(wt, mpg))
+
+# Use text layer and map fcyl to label
+  plt_mpg_vs_wt +
+      geom_text(aes(label = fcyl))
+      
+# A hexadecimal color
+  my_blue <- "#4ABEFF"
+
+# Set the point color and alpha
+  ggplot(mtcars, aes(wt, mpg)) +
+      geom_point(color = my_blue, alpha = 0.6)
+      
+# Change the color mapping to a fill mapping and set point size and shape
+  ggplot(mtcars, aes(wt, mpg, fill = fcyl)) +
+      geom_point(color = my_blue, size = 10, shape = 1)
+      
+# Set the position
+  palette <- c(automatic = "#377EB8", manual = "#E41A1C")
+      ggplot(mtcars, aes(fcyl, fill = fam)) +
+      geom_bar(position = 'dodge') +
+      labs(x = "Number of Cylinders", y = "Count")
+      scale_fill_manual("Transmission", values = palette)
+      
+# Plot 0 vs. mpg, add jitter, set y-axis limits
+  ggplot(mtcars, aes(mpg, 0)) +
+      geom_point(position = "jitter") +
+      ylim(-2, 2)
+      
+                                                              # /*\ GEOMETRIES /*\
+
+# Plot base
+  plt_mpg_vs_fcyl_by_fam <- ggplot(mtcars, aes(fcyl, mpg, color = fam))
+
+# Default points are shown for comparison
+  plt_mpg_vs_fcyl_by_fam + 
+      geom_point()
+
+# Now jitter and dodge the point positions
+  plt_mpg_vs_fcyl_by_fam + 
+      geom_point(position = position_jitterdodge(jitter.width = 0.3, dodge.width = 0.3))
+      
