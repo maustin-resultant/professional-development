@@ -77,3 +77,64 @@
   p_wt_vs_fcyl_by_fam_jit +
       stat_summary(fun.data = mean_cl_normal, position = posn_d)
       
+                                                        # /*\ COORDINATES /*\
+
+# Add Cartesian coordinates with x limits from 3 to 6
+  ggplot(mtcars, aes(x = wt, y = hp, color = fam)) +
+      geom_point() +
+      geom_smooth() +
+      coord_cartesian(xlim = c(3, 6))
+      
+# Fix the coordinate ratio
+  ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
+      geom_jitter() +
+      geom_smooth(method = "lm", se = FALSE) +
+      coord_fixed(ratio = 1)
+      
+# Turn clipping off and remove axis lines
+  ggplot(mtcars, aes(wt, mpg)) +
+      geom_point(size = 2) +
+      coord_cartesian(expand = 0, clip = "off") +
+      theme_classic() +
+      theme(axis.line = element_blank())
+      
+# Perform a log10 coordinate system transformation
+  ggplot(msleep, aes(bodywt, brainwt)) +
+      geom_point() +
+      coord_trans(x = "log10", y = "log10")
+      
+# Update the plot and add the secondary y-axis 
+  y_breaks <- c(59, 68, 77, 86, 95, 104)
+  y_labels <- (y_breaks - 32) * 5 / 9
+  secondary_y_axis <- sec_axis(
+      trans = identity,
+      name = "Celsius",
+      breaks = y_breaks,
+      labels = y_labels
+      )
+  ggplot(airquality, aes(x = Date, y = Temp)) +
+      geom_line() +
+      scale_y_continuous(sec.axis = secondary_y_axis) +
+       labs(x = "Date (1973)", y = "Fahrenheit")
+       
+# Set a dodge width of 0.5 for partially overlapping bars
+  ggplot(mtcars, aes(fcyl, fill = fam)) +
+      geom_bar(position = position_dodge(width = 0.5)) +
+      coord_flip()
+      
+# Flip the axes to set car to the y axis
+  ggplot(mtcars, aes(car, wt)) +
+      geom_point() +
+      labs(x = "car", y = "weight") +
+      coord_flip()
+      
+# Reduce the bar width to 0.1 and add a continuous x scale from 0.5 to 1.5
+  ggplot(mtcars, aes(x = 1, fill = fcyl)) +
+      geom_bar(width = 0.1) +
+      coord_polar(theta = "y") +
+      scale_x_continuous(limit = c(0.5, 1.5))
+      
+# Convert to polar coordinates:
+  ggplot(wind, aes(wd, fill = ws)) +
+      geom_bar(width = 1) +
+      coord_polar(start = -pi/16)
