@@ -138,3 +138,66 @@
   ggplot(wind, aes(wd, fill = ws)) +
       geom_bar(width = 1) +
       coord_polar(start = -pi/16)
+
+                                                            # /*\ FACETS /*\
+
+# Facet rows by am
+  ggplot(mtcars, aes(wt, mpg)) + 
+      geom_point() +
+      facet_grid(rows = vars(am))
+      
+# Facet columns by cyl
+  ggplot(mtcars, aes(wt, mpg)) + 
+      geom_point() +
+      facet_grid(cols = vars(cyl))
+      
+# Facet rows by am and columns by cyl
+  ggplot(mtcars, aes(wt, mpg)) + 
+      geom_point() +
+      facet_grid(rows = vars(am), cols = vars(cyl))
+      
+# Update the plot and grid facet on gear and vs
+  ggplot(mtcars, aes(x = wt, y = mpg, color = fcyl_fam, size = disp)) +
+      geom_point() +
+      scale_color_brewer(palette = "Paired") +
+      facet_grid(rows = vars(gear), cols = vars(vs))
+      
+# Facet rows by am using formula notation
+  ggplot(mtcars, aes(wt, mpg)) + 
+      geom_point() +
+      facet_grid(am ~ .)
+      
+# Facet columns by cyl using formula notation
+  ggplot(mtcars, aes(wt, mpg)) + 
+      geom_point() +
+      facet_grid(. ~ cyl)
+      
+# Facet rows by am and columns by cyl using formula notation
+  ggplot(mtcars, aes(wt, mpg)) + 
+      geom_point() +
+      facet_grid(am ~ cyl)
+      
+# Plot wt by mpg, displaying both the values and the variables
+  ggplot(mtcars, aes(wt, mpg)) +
+      geom_point() +
+      facet_grid(cols = vars(cyl), labeller = label_both)
+      
+# Facet cols by two variables
+  ggplot(mtcars, aes(wt, mpg)) +
+      geom_point() +
+      facet_grid(cols = vars(vs, cyl), labeller = label_context)
+      
+# Make factor, set proper labels explictly
+  mtcars$fam <- factor(mtcars$am, labels = c(`0` = "automatic",
+                                             `1` = "manual"))
+  ggplot(mtcars, aes(wt, mpg)) +
+      geom_point() +
+      facet_grid(cols = vars(fam))
+      
+# Make factor, set proper labels explictly, and manually set the label order
+  mtcars$fam <- factor(mtcars$am,
+                       levels = c(1, 0),
+                       labels = c("manual", "automatic"))
+  ggplot(mtcars, aes(wt, mpg)) +
+      geom_point() +
+      facet_grid(cols = vars(fam))
