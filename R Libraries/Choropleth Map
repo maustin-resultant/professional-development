@@ -54,5 +54,8 @@ plot(1:15, wss, type = "b",
 
 kmean <- kmeans(IndianaClusters, 2)
 kmean$centers
+autoplot(kmean, IndianaClusters, frame = TRUE)
 
+kmean <- kmeans(IndianaClusters, 5)
+kmean$centers
 autoplot(kmean, IndianaClusters, frame = TRUE)
