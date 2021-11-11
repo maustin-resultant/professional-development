@@ -47,3 +47,12 @@ for (i in 1:15) {
      wss[i] <- km.out$tot.withinss
      }
      
+plot(1:15, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+     # 2 clusters
+
+kmean <- kmeans(data, 2)
+kmean$centers
+
+autoplot(kmean, data, frame = TRUE)
