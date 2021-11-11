@@ -39,4 +39,11 @@ drops <- c("ST","STATE", "ST_ABBR", "STCNTY", "COUNTY", "FIPS", "LOCATION")
 IndianaClusters[ , !(names(IndianaClusters) %in% drops)]
 
 
+IndianaClusters <- Indiana %>%
+     select(E_NOHSDP, E_POV, E_UNEMP, E_PCI, E_MINRTY)
 
+for (i in 1:15) {
+     km.out <- kmeans(IndianaClusters, centers = i, nstart = 20)
+     wss[i] <- km.out$tot.withinss
+     }
+     
