@@ -4,3 +4,7 @@ library("ggplot2")
 library("dplyr")
 library("ggfortify")
 
+Indiana <- read.csv("/Users/maustin/Desktop/Indiana.csv")
+summary(Indiana)
+head(Indiana)
+
