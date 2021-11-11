@@ -8,3 +8,35 @@ Indiana <- read.csv("/Users/maustin/Desktop/Indiana.csv")
 summary(Indiana)
 head(Indiana)
 
+wss <- 0
+
+for (i in 1:15) {
+     km.out <- kmeans(Indiana, centers = i, nstart = 20)
+     wss[i] <- km.out$tot.withinss
+     }
+
+km.out <- kmeans(Indiana, centers=3, nstart=20)
+
+Indiana[1:3,1] <- c(NA, Inf, NaN)
+sum(sapply(Indiana, is.na))
+sum(sapply(Indiana, is.infinite))
+sum(sapply(Indiana, is.nan))
+
+Indiana <- Indiana[complete.cases(Indiana),]
+sum(sapply(Indiana, is.infinite))
+
+Indiana[apply(sapply(Indiana, is.finite), 1, all),]
+
+Indiana <- do.call(Indiana, lapply(Indiana, function(x) replace(x, is.infinite(x), NA)))
+sum(sapply(Indiana, is.infinite))                                 # Received output of 0
+
+sum(sapply(Indiana, is.na))
+sum(sapply(Indiana, is.infinite))
+sum(sapply(Indiana, is.nan))                                 # Received all outputs of 0
+
+IndianaClusters <- Indiana
+drops <- c("ST","STATE", "ST_ABBR", "STCNTY", "COUNTY", "FIPS", "LOCATION")
+IndianaClusters[ , !(names(IndianaClusters) %in% drops)]
+
+
+
