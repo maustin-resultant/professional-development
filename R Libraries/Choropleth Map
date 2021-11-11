@@ -1,5 +1,6 @@
+install.packages("ggfortify")
+
 library("ggplot2")
 library("dplyr")
-library("tidyverse")
-library("usmap")
+library("ggfortify")
 
