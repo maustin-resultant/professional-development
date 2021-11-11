@@ -52,7 +52,7 @@ plot(1:15, wss, type = "b",
      ylab = "Within groups sum of squares")
      # 2 clusters
 
-kmean <- kmeans(data, 2)
+kmean <- kmeans(IndianaClusters, 2)
 kmean$centers
 
-autoplot(kmean, data, frame = TRUE)
+autoplot(kmean, IndianaClusters, frame = TRUE)
