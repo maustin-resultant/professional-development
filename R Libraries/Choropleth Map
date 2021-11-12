@@ -1,8 +1,16 @@
 install.packages("ggfortify")
+install.packages("devtools")
+devtools::install_github("UrbanInstitute/urbnmapr")
 
 library("ggplot2")
 library("dplyr")
 library("ggfortify")
+library("plotly")
+library("urbnmapr")
+
+
+# ------------------------------------------------------
+
 
 Indiana <- read.csv("/Users/maustin/Desktop/Indiana.csv")
 summary(Indiana)
@@ -27,8 +35,10 @@ sum(sapply(Indiana, is.infinite))
 
 Indiana[apply(sapply(Indiana, is.finite), 1, all),]
 
-Indiana <- do.call(Indiana, lapply(Indiana, function(x) replace(x, is.infinite(x), NA)))
+Indiana <- do.call(data.frame, lapply(Indiana, function(x) replace(x, is.infinite(x), NA)))
 sum(sapply(Indiana, is.infinite))                                 # Received output of 0
+
+Indiana <- Indiana[complete.cases(Indiana),]
 
 sum(sapply(Indiana, is.na))
 sum(sapply(Indiana, is.infinite))
@@ -59,3 +69,7 @@ autoplot(kmean, IndianaClusters, frame = TRUE)
 kmean <- kmeans(IndianaClusters, 5)
 kmean$centers
 autoplot(kmean, IndianaClusters, frame = TRUE)
+
+Indiana <- read.csv("/Users/maustin/Desktop/Indiana.csv")
+View(Indiana)
+
