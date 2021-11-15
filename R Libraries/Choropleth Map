@@ -87,7 +87,7 @@ IndianaPlotting_V1 = Indiana %>%
   dplyr::select(STATE,ST_ABBR, COUNTY, ECON_REGION, FIPS, LOCATION, RPL_THEMES,
          E_NOHSDP, E_POV, E_UNEMP, E_PCI, E_MINRTY, cluster)
 
-IndianaPlotting_V1 <- subset(IndianaPlotting_V1, RPL_THEMES != "-999"))
+IndianaPlotting_V1 <- subset(IndianaPlotting_V1, RPL_THEMES != "-999")
 
 IndianaPlotting_V1 <- tibble::rowid_to_column(IndianaPlotting_V1, "ID")
 View(IndianaPlotting_V1)
@@ -112,7 +112,7 @@ head(states)
 ggplot(data = states) + 
   geom_polygon(aes(x = long, y = lat, fill = region, group = group), color = "white") + 
   coord_fixed(1.3) +
-  guides(fill=FALSE)
+  guides(fill="none")
 
 Indiana_map <- subset(states, region == "indiana")
 ggplot(data = Indiana_map) + 
@@ -122,22 +122,67 @@ ggplot(data = Indiana_map) +
 # ------------------------------------------------------
 
 counties <- map_data("county")
-in_county <- subset(counties, region == "indiana") %>%
-  select(long, lat, subregion)
-
-in_county <- in_county[!duplicated(in_county$subregion), ]
+in_county <- subset(counties, region == "indiana") 
 
 capFirst <- function(s) {
   paste(toupper(substring(s, 1, 1)), substring(s, 2), sep = "")
   }
 
 in_county$subregion <- capFirst(in_county$subregion)
-View(in_county)
 
-in_county["23944", "subregion"] <- "De Kalb"
+in_county["23944", "subregion"] <- "DeKalb"
+in_county["23945", "subregion"] <- "DeKalb"
+in_county["23946", "subregion"] <- "DeKalb"
+in_county["23947", "subregion"] <- "DeKalb"
+in_county["23948", "subregion"] <- "DeKalb"
+in_county["23949", "subregion"] <- "DeKalb"
+
 in_county["24905", "subregion"] <- "St. Joseph"
+in_county["24906", "subregion"] <- "St. Joseph"
+in_county["24907", "subregion"] <- "St. Joseph"
+in_county["24908", "subregion"] <- "St. Joseph"
+in_county["24909", "subregion"] <- "St. Joseph"
+in_county["24910", "subregion"] <- "St. Joseph"
+in_county["24911", "subregion"] <- "St. Joseph"
+in_county["24912", "subregion"] <- "St. Joseph"
+in_county["24913", "subregion"] <- "St. Joseph"
+in_county["24914", "subregion"] <- "St. Joseph"
+in_county["24915", "subregion"] <- "St. Joseph"
+in_county["24916", "subregion"] <- "St. Joseph"
+in_county["24917", "subregion"] <- "St. Joseph"
+in_county["24918", "subregion"] <- "St. Joseph"
+in_county["24919", "subregion"] <- "St. Joseph"
+
 in_county["24494", "subregion"] <- "LaPorte"
+in_county["24495", "subregion"] <- "LaPorte"
+in_county["24496", "subregion"] <- "LaPorte"
+in_county["24497", "subregion"] <- "LaPorte"
+in_county["24498", "subregion"] <- "LaPorte"
+in_county["24499", "subregion"] <- "LaPorte"
+in_county["24500", "subregion"] <- "LaPorte"
+in_county["24501", "subregion"] <- "LaPorte"
+in_county["24502", "subregion"] <- "LaPorte"
+in_county["24503", "subregion"] <- "LaPorte"
+in_county["24504", "subregion"] <- "LaPorte"
+in_county["24505", "subregion"] <- "LaPorte"
+in_county["24506", "subregion"] <- "LaPorte"
+in_county["24507", "subregion"] <- "LaPorte"
+in_county["24508", "subregion"] <- "LaPorte"
+in_county["24509", "subregion"] <- "LaPorte"
+in_county["24510", "subregion"] <- "LaPorte"
+in_county["24511", "subregion"] <- "LaPorte"
+in_county["24512", "subregion"] <- "LaPorte"
+in_county["24513", "subregion"] <- "LaPorte"
+in_county["24514", "subregion"] <- "LaPorte"
+in_county["24515", "subregion"] <- "LaPorte"
+
 in_county["24464", "subregion"] <- "LaGrange"
+in_county["24465", "subregion"] <- "LaGrange"
+in_county["24466", "subregion"] <- "LaGrange"
+in_county["24467", "subregion"] <- "LaGrange"
+in_county["24468", "subregion"] <- "LaGrange"
+in_county["24469", "subregion"] <- "LaGrange"
+
 View(in_county)
 
 # ------------------------------------------------------
@@ -149,10 +194,29 @@ in_base + theme_nothing()
 
 in_base + theme_nothing() + 
   geom_polygon(data = in_county, fill = NA, color = "white") +
-  geom_polygon(color = "black", fill = NA)  # get the state border back on top
+  geom_polygon(color = "black", fill = NA)  
 
-IndianaPlotting_V2 <- full_join(IndianaPlotting_V1, in_county, by = c("COUNTY" = "subregion"))
+IndianaPlotting_V2 <- inner_join(IndianaPlotting_V1, in_county, by = c("COUNTY" = "subregion"))
 View(IndianaPlotting_V2)
 
 IndianaPlotting_V2 <- left_join(IndianaPlotting_V1, IndianaPlotting_V2, by = "ID")
 View(IndianaPlotting_V2)
+
+# ------------------------------------------------------
+
+ditch_the_axes <- theme(
+  axis.text = element_blank(),
+  axis.line = element_blank(),
+  axis.ticks = element_blank(),
+  panel.border = element_blank(),
+  panel.grid = element_blank(),
+  axis.title = element_blank()
+  )
+
+elbow_room1 <- in_base + 
+  geom_polygon(data = IndianaPlotting_V2, aes(fill = RPL_THEMES.x), color = "white") +
+  geom_polygon(color = "black", fill = NA) +
+  theme_bw() +
+  ditch_the_axes
+
+elbow_room1
