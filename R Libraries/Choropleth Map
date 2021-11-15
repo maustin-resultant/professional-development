@@ -80,3 +80,5 @@ IndianaPlotting = Indiana %>%
   dplyr::select(STATE,ST_ABBR, COUNTY, ECON_REGION, FIPS, LOCATION, RPL_THEMES,
                 E_NOHSDP, E_POV, E_UNEMP, E_PCI, E_MINRTY, cluster)
                 
+IndianaPlotting <- subset(IndianaPlotting, RPL_THEMES != "-999")
+View(IndianaPlotting)
