@@ -11,6 +11,7 @@ library("ggmap")
 library("stringr")
 library("maps")
 library("mapdata")
+library("tidyverse")
 
 # ------------------------------------------------------
 
@@ -82,12 +83,14 @@ colnames(Indiana)
 
 # ------------------------------------------------------
 
-IndianaPlotting = Indiana %>%
+IndianaPlotting_V1 = Indiana %>%
   dplyr::select(STATE,ST_ABBR, COUNTY, ECON_REGION, FIPS, LOCATION, RPL_THEMES,
          E_NOHSDP, E_POV, E_UNEMP, E_PCI, E_MINRTY, cluster)
 
-IndianaPlotting <- subset(IndianaPlotting, RPL_THEMES != "-999")
-View(IndianaPlotting)
+IndianaPlotting_V1 <- subset(IndianaPlotting_V1, RPL_THEMES != "-999"))
+
+IndianaPlotting_V1 <- tibble::rowid_to_column(IndianaPlotting_V1, "ID")
+View(IndianaPlotting_V1)
 
 # ------------------------------------------------------
 
@@ -116,8 +119,28 @@ ggplot(data = Indiana_map) +
   geom_polygon(aes(x = long, y = lat, group = group), fill = "palegreen", color = "black") + 
   coord_fixed(1.3)
 
+# ------------------------------------------------------
+
 counties <- map_data("county")
-in_county <- subset(counties, region == "indiana")
+in_county <- subset(counties, region == "indiana") %>%
+  select(long, lat, subregion)
+
+in_county <- in_county[!duplicated(in_county$subregion), ]
+
+capFirst <- function(s) {
+  paste(toupper(substring(s, 1, 1)), substring(s, 2), sep = "")
+  }
+
+in_county$subregion <- capFirst(in_county$subregion)
+View(in_county)
+
+in_county["23944", "subregion"] <- "De Kalb"
+in_county["24905", "subregion"] <- "St. Joseph"
+in_county["24494", "subregion"] <- "LaPorte"
+in_county["24464", "subregion"] <- "LaGrange"
+View(in_county)
+
+# ------------------------------------------------------
 
 in_base <- ggplot(data = Indiana_map, mapping = aes(x = long, y = lat, group = group)) + 
   coord_fixed(1.3) + 
@@ -127,3 +150,9 @@ in_base + theme_nothing()
 in_base + theme_nothing() + 
   geom_polygon(data = in_county, fill = NA, color = "white") +
   geom_polygon(color = "black", fill = NA)  # get the state border back on top
+
+IndianaPlotting_V2 <- full_join(IndianaPlotting_V1, in_county, by = c("COUNTY" = "subregion"))
+View(IndianaPlotting_V2)
+
+IndianaPlotting_V2 <- left_join(IndianaPlotting_V1, IndianaPlotting_V2, by = "ID")
+View(IndianaPlotting_V2)
