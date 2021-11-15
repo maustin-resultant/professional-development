@@ -70,6 +70,13 @@ kmean <- kmeans(IndianaClusters, 5)
 kmean$centers
 autoplot(kmean, IndianaClusters, frame = TRUE)
 
-Indiana <- read.csv("/Users/maustin/Desktop/Indiana.csv")
-View(Indiana)
+kmeansRes<-factor(kmean$cluster)
+Indiana$cluster <- kmean$cluster
 
+View(Indiana)
+colnames(Indiana)
+
+IndianaPlotting = Indiana %>%
+  dplyr::select(STATE,ST_ABBR, COUNTY, ECON_REGION, FIPS, LOCATION, RPL_THEMES,
+                E_NOHSDP, E_POV, E_UNEMP, E_PCI, E_MINRTY, cluster)
+                
