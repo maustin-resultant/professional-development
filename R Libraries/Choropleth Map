@@ -3,6 +3,7 @@ install.packages("ggmap")
 install.packages("stringr")
 install.packages(c("maps", "mapdata"))
 devtools::install_github("dkahle/ggmap")
+install.packages(c("sf","tmap", "RColorBrewer", "cartogram"))
 
 library("ggplot2")
 library("dplyr")
@@ -12,6 +13,9 @@ library("stringr")
 library("maps")
 library("mapdata")
 library("tidyverse")
+library("tmap")
+library("RColorBrewer")
+library("cartogram")
 
 # ------------------------------------------------------
 
@@ -199,9 +203,6 @@ in_base + theme_nothing() +
 IndianaPlotting_V2 <- inner_join(IndianaPlotting_V1, in_county, by = c("COUNTY" = "subregion"))
 View(IndianaPlotting_V2)
 
-IndianaPlotting_V2 <- left_join(IndianaPlotting_V1, IndianaPlotting_V2, by = "ID")
-View(IndianaPlotting_V2)
-
 # ------------------------------------------------------
 
 ditch_the_axes <- theme(
@@ -214,7 +215,7 @@ ditch_the_axes <- theme(
   )
 
 elbow_room1 <- in_base + 
-  geom_polygon(data = IndianaPlotting_V2, aes(fill = RPL_THEMES.x), color = "white") +
+  geom_polygon(data = IndianaPlotting_V2, aes(fill = RPL_THEMES), color = "white") +
   geom_polygon(color = "black", fill = NA) +
   theme_bw() +
   ditch_the_axes
