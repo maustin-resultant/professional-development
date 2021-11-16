@@ -16,6 +16,7 @@ library("tidyverse")
 library("tmap")
 library("RColorBrewer")
 library("cartogram")
+library("sf")
 
 # ------------------------------------------------------
 
@@ -82,8 +83,8 @@ autoplot(kmean, IndianaClusters, frame = TRUE)
 kmeansRes<-factor(kmean$cluster)
 Indiana$cluster <- kmean$cluster
 
-View(Indiana)
-colnames(Indiana)
+# View(Indiana)
+# colnames(Indiana)
 
 # ------------------------------------------------------
 
@@ -94,7 +95,9 @@ IndianaPlotting_V1 = Indiana %>%
 IndianaPlotting_V1 <- subset(IndianaPlotting_V1, RPL_THEMES != "-999")
 
 IndianaPlotting_V1 <- tibble::rowid_to_column(IndianaPlotting_V1, "ID")
-View(IndianaPlotting_V1)
+# View(IndianaPlotting_V1)
+
+summary(IndianaPlotting_V1)
 
 # ------------------------------------------------------
 
@@ -187,7 +190,90 @@ in_county["24467", "subregion"] <- "LaGrange"
 in_county["24468", "subregion"] <- "LaGrange"
 in_county["24469", "subregion"] <- "LaGrange"
 
-View(in_county)
+# View(in_county)
+
+in_econ_regions <- subset(counties, region == "indiana")
+# View(in_econ_regions)
+
+capFirst <- function(s) {
+  paste(toupper(substring(s, 1, 1)), substring(s, 2), sep = "")
+}
+
+in_econ_regions$subregion <- capFirst(in_econ_regions$subregion)
+
+in_econ_regions["23944", "subregion"] <- "DeKalb"
+in_econ_regions["23945", "subregion"] <- "DeKalb"
+in_econ_regions["23946", "subregion"] <- "DeKalb"
+in_econ_regions["23947", "subregion"] <- "DeKalb"
+in_econ_regions["23948", "subregion"] <- "DeKalb"
+in_econ_regions["23949", "subregion"] <- "DeKalb"
+
+in_econ_regions["24905", "subregion"] <- "St. Joseph"
+in_econ_regions["24906", "subregion"] <- "St. Joseph"
+in_econ_regions["24907", "subregion"] <- "St. Joseph"
+in_econ_regions["24908", "subregion"] <- "St. Joseph"
+in_econ_regions["24909", "subregion"] <- "St. Joseph"
+in_econ_regions["24910", "subregion"] <- "St. Joseph"
+iin_econ_regions["24911", "subregion"] <- "St. Joseph"
+in_econ_regions["24912", "subregion"] <- "St. Joseph"
+in_econ_regions["24913", "subregion"] <- "St. Joseph"
+in_econ_regions["24914", "subregion"] <- "St. Joseph"
+in_econ_regions["24915", "subregion"] <- "St. Joseph"
+in_econ_regions["24916", "subregion"] <- "St. Joseph"
+in_econ_regions["24917", "subregion"] <- "St. Joseph"
+in_econ_regions["24918", "subregion"] <- "St. Joseph"
+in_econ_regions["24919", "subregion"] <- "St. Joseph"
+
+in_econ_regions["24494", "subregion"] <- "LaPorte"
+in_econ_regions["24495", "subregion"] <- "LaPorte"
+in_econ_regions["24496", "subregion"] <- "LaPorte"
+in_econ_regions["24497", "subregion"] <- "LaPorte"
+in_econ_regions["24498", "subregion"] <- "LaPorte"
+in_econ_regions["24499", "subregion"] <- "LaPorte"
+in_econ_regions["24500", "subregion"] <- "LaPorte"
+in_econ_regions["24501", "subregion"] <- "LaPorte"
+in_econ_regions["24502", "subregion"] <- "LaPorte"
+in_econ_regions["24503", "subregion"] <- "LaPorte"
+in_econ_regions["24504", "subregion"] <- "LaPorte"
+in_econ_regions["24505", "subregion"] <- "LaPorte"
+in_econ_regions["24506", "subregion"] <- "LaPorte"
+in_econ_regions["24507", "subregion"] <- "LaPorte"
+in_econ_regions["24508", "subregion"] <- "LaPorte"
+in_econ_regions["24509", "subregion"] <- "LaPorte"
+in_econ_regions["24510", "subregion"] <- "LaPorte"
+in_econ_regions["24511", "subregion"] <- "LaPorte"
+in_econ_regions["24512", "subregion"] <- "LaPorte"
+in_econ_regions["24513", "subregion"] <- "LaPorte"
+in_econ_regions["24514", "subregion"] <- "LaPorte"
+in_econ_regions["24515", "subregion"] <- "LaPorte"
+
+in_econ_regions["24464", "subregion"] <- "LaGrange"
+in_econ_regions["24465", "subregion"] <- "LaGrange"
+in_econ_regions["24466", "subregion"] <- "LaGrange"
+in_econ_regions["24467", "subregion"] <- "LaGrange"
+in_econ_regions["24468", "subregion"] <- "LaGrange"
+in_econ_regions["24469", "subregion"] <- "LaGrange"
+
+in_econ_regions <- left_join(IndianaPlotting_V1, in_econ_regions, by = c("COUNTY" = "subregion"))
+# View(in_econ_regions)
+
+in_econ_regions <- in_econ_regions %>%
+  select(STATE, COUNTY, ECON_REGION, long, lat, group, order, region)
+
+pal <- c(
+  "1" = "lightgreen",
+  "2" = "pink", 
+  "3" = "mediumturquoise", 
+  "4" = "yellow1", 
+  "5" = "orange",
+  "6" = "royalblue1", 
+  "7" = "tomato1", 
+  "8" = "steelblue1", 
+  "9" = "springgreen4",
+  "10" = "salmon", 
+  "11" = "mediumpurple", 
+  "12" = "lavendarblush"
+)
 
 # ------------------------------------------------------
 
@@ -198,10 +284,11 @@ in_base + theme_nothing()
 
 in_base + theme_nothing() + 
   geom_polygon(data = in_county, fill = NA, color = "white") +
-  geom_polygon(color = "black", fill = NA)  
+  geom_polygon(color = "black", fill = NA) 
 
 IndianaPlotting_V2 <- inner_join(IndianaPlotting_V1, in_county, by = c("COUNTY" = "subregion"))
-View(IndianaPlotting_V2)
+summary(IndianaPlotting_V2)
+# View(IndianaPlotting_V2)
 
 # ------------------------------------------------------
 
@@ -221,3 +308,5 @@ elbow_room1 <- in_base +
   ditch_the_axes
 
 elbow_room1
+
+# ------------------------------------------------------
