@@ -126,22 +126,22 @@ milk_prices_2019
 milk_prices_2020
 
 milk_prices_2015$PoundsPer_1TonCheddar <- 
-                    milk_prices_2015$Price * 1000
+                    milk_prices_2015$PoundsPer_1KGCheddar * 1000
 
 milk_prices_2016$PoundsPer_1TonCheddar <- 
-                    milk_prices_2016$Price * 1000
+                    milk_prices_2016$PoundsPer_1KGCheddar * 1000
 
 milk_prices_2017$PoundsPer_1TonCheddar <- 
-                    milk_prices_2017$Price * 1000
+                    milk_prices_2017$PoundsPer_1KGCheddar * 1000
 
 milk_prices_2018$PoundsPer_1TonCheddar <- 
-                    milk_prices_2018$Price * 1000
+                    milk_prices_2018$PoundsPer_1KGCheddar * 1000
 
 milk_prices_2019$PoundsPer_1TonCheddar <- 
-                    milk_prices_2019$Price * 1000
+                    milk_prices_2019$PoundsPer_1KGCheddar * 1000
 
 milk_prices_2020$PoundsPer_1TonCheddar <- 
-                    milk_prices_2020$Price * 1000
+                    milk_prices_2020$PoundsPer_1KGCheddar * 1000
 
 milk_prices_2015
 milk_prices_2016
