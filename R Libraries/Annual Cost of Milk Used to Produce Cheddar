@@ -422,7 +422,7 @@ milk_prices_2015$Cost <- milk_prices_2015$PoundsPer_1TonCheddar * milk_prices_20
 sum(milk_prices_2015$Cost)
 
 Year <- c("2015", "2016", "2017", "2018", "2019", "2020")
-Cost <- c("73963.36", "70172.15", "95258.85", "97110.85", "94385.04", "88098.4")
+Cost <- c("702651920", "666635425", "887977635", "922553075", "896657880", "836934800")
 
 annual_cost <- data.frame(Year, Cost)
 annual_cost$Year <- as.numeric(annual_cost$Year)
