@@ -1,0 +1,430 @@
+# Milk Prices Dataset: https://environment.data.gov.uk/linked-data/cube/explore?uri=http%3A%2F%2Fenvironment.data.gov.uk%2Flinked-data%2Fcatalog%2Fdatasets%2Fentry%2Fmilk-prices-and-composition-of-milk-annual-statistics&filters-drawer=closed
+
+# Milk Products Dataset: https://www.gov.uk/government/statistics/milk-utilisation-by-dairies-in-england-and-wales
+
+# Conversions Dataset: https://www.gov.uk/government/statistics/milk-utilisation-by-dairies-in-england-and-wales
+
+
+# ---
+
+
+library("readxl")
+library("dplyr")
+library("tidyverse")
+
+milk_prices <- read.csv("datasets/milk_prices.csv")
+milk_products <- read.csv("datasets/Milk_products_production.csv")
+conversions <- read_excel("datasets/conversion_factors.xlsx")
+
+head(milk_prices)
+head(milk_products)
+head(conversions)
+
+milk_prices$year <- substr(milk_prices$Time, 1, 4)
+head(milk_prices)
+
+milk_prices <- milk_prices %>%
+                    filter(year %in% c("2015", "2016", "2017", 
+                                     "2018", "2019", "2020"))
+milk_prices
+
+milk_prices <- milk_prices %>% drop_na(Price)
+milk_prices
+
+milk_prices_2020 <- milk_prices %>%
+  filter(year=="2020") 
+
+milk_prices_2020
+
+# ---
+
+milk_prices_2019 <- milk_prices %>%
+  filter(year=="2019") 
+
+milk_prices_2019
+
+# ---
+
+milk_prices_2018 <- milk_prices %>%
+  filter(year=="2018") 
+
+milk_prices_2018
+
+# ---
+
+milk_prices_2017 <- milk_prices %>%
+  filter(year=="2017") 
+
+milk_prices_2017
+
+# ---
+
+milk_prices_2016 <- milk_prices %>%
+  filter(year=="2016") 
+
+milk_prices_2016
+
+# ---
+
+milk_prices_2015 <- milk_prices %>%
+  filter(year=="2015") 
+
+milk_prices_2015
+
+milk_prices_2015 <- milk_prices_2015 %>%
+        select(Time, Price, year)
+
+milk_prices_2016 <- milk_prices_2016 %>%
+        select(Time, Price, year)
+
+milk_prices_2017 <- milk_prices_2017 %>%
+        select(Time, Price, year)
+
+milk_prices_2018 <- milk_prices_2018 %>%
+        select(Time, Price, year)
+
+milk_prices_2019 <- milk_prices_2019 %>%
+        select(Time, Price, year)
+
+milk_prices_2020 <- milk_prices_2020 %>%
+        select(Time, Price, year)
+
+milk_prices_2015
+milk_prices_2016
+milk_prices_2017
+milk_prices_2018
+milk_prices_2019
+milk_prices_2020
+
+# milk_prices are pounds per L
+# milk_products are in thousand tons
+# conversions are liters of milk used to make 1 kg of product
+
+milk_prices_2015$PoundsPer_1KGCheddar <- 
+                    milk_prices_2015$Price * 9.5
+
+milk_prices_2016$PoundsPer_1KGCheddar <- 
+                    milk_prices_2016$Price * 9.5
+
+milk_prices_2017$PoundsPer_1KGCheddar <- 
+                    milk_prices_2017$Price * 9.5
+
+milk_prices_2018$PoundsPer_1KGCheddar <- 
+                    milk_prices_2018$Price * 9.5
+
+milk_prices_2019$PoundsPer_1KGCheddar <- 
+                    milk_prices_2019$Price * 9.5
+
+milk_prices_2020$PoundsPer_1KGCheddar <- 
+                    milk_prices_2020$Price * 9.5
+
+milk_prices_2015
+milk_prices_2016
+milk_prices_2017
+milk_prices_2018
+milk_prices_2019
+milk_prices_2020
+
+milk_prices_2015$PoundsPer_1TonCheddar <- 
+                    milk_prices_2015$PoundsPer_1KGCheddar * 1000
+
+milk_prices_2016$PoundsPer_1TonCheddar <- 
+                    milk_prices_2016$PoundsPer_1KGCheddar * 1000
+
+milk_prices_2017$PoundsPer_1TonCheddar <- 
+                    milk_prices_2017$PoundsPer_1KGCheddar * 1000
+
+milk_prices_2018$PoundsPer_1TonCheddar <- 
+                    milk_prices_2018$PoundsPer_1KGCheddar * 1000
+
+milk_prices_2019$PoundsPer_1TonCheddar <- 
+                    milk_prices_2019$PoundsPer_1KGCheddar * 1000
+
+milk_prices_2020$PoundsPer_1TonCheddar <- 
+                    milk_prices_2020$PoundsPer_1KGCheddar * 1000
+
+milk_prices_2015
+milk_prices_2016
+milk_prices_2017
+milk_prices_2018
+milk_prices_2019
+milk_prices_2020
+
+conversions <- conversions %>%
+                    filter(Product == "Cheddar")
+conversions
+
+milk_products$year <- substr(milk_products$X, 5, 6)
+head(milk_products)
+
+milk_products = milk_products[-1,]
+milk_products <- milk_products %>%
+                    select("X", "Cheddar.Cheese.Production", "year")
+milk_products
+
+milk_products_2020 <- milk_products %>%
+                        filter(year == "20")
+
+milk_products_2019 <- milk_products %>%
+                        filter(year == "19")
+
+milk_products_2018 <- milk_products %>%
+                        filter(year == "18")
+
+milk_products_2017 <- milk_products %>%
+                        filter(year == "17")
+
+milk_products_2016 <- milk_products %>%
+                        filter(year == "16")
+
+milk_products_2015 <- milk_products %>%
+                        filter(year == "15")
+
+milk_products_2020
+milk_products_2019
+milk_products_2018
+milk_products_2017
+milk_products_2016
+milk_products_2015
+
+milk_products_2020 <- 
+        sapply(milk_products_2020, gsub, pattern = ",", replacement= ".")
+transform(milk_products_2020, Cheddar.Cheese.Production 
+          = as.numeric(Cheddar.Cheese.Production))
+
+milk_products_2019 <- 
+        sapply(milk_products_2019, gsub, pattern = ",", replacement= ".")
+transform(milk_products_2019, Cheddar.Cheese.Production 
+          = as.numeric(Cheddar.Cheese.Production))
+
+milk_products_2018 <- 
+        sapply(milk_products_2018, gsub, pattern = ",", replacement= ".")
+transform(milk_products_2018, Cheddar.Cheese.Production 
+          = as.numeric(Cheddar.Cheese.Production))
+
+milk_products_2017 <- 
+        sapply(milk_products_2017, gsub, pattern = ",", replacement= ".")
+transform(milk_products_2017, Cheddar.Cheese.Production 
+          = as.numeric(Cheddar.Cheese.Production))
+
+milk_products_2016 <- 
+        sapply(milk_products_2016, gsub, pattern = ",", replacement= ".")
+transform(milk_products_2016, Cheddar.Cheese.Production 
+          = as.numeric(Cheddar.Cheese.Production))
+
+milk_products_2015 <- 
+        sapply(milk_products_2015, gsub, pattern = ",", replacement= ".")
+transform(milk_products_2015, Cheddar.Cheese.Production 
+          = as.numeric(Cheddar.Cheese.Production))
+
+
+milk_products_2020
+milk_products_2019
+milk_products_2018
+milk_products_2017
+milk_products_2016
+milk_products_2015
+
+milk_products_2020 <- as.data.frame(milk_products_2020)
+
+milk_products_2020$Time <- c("2020-01", "2020-02", "2020-03", "2020-04",
+                            "2020-05", "2020-06", "2020-07", "2020-08",
+                            "2020-09", "2020-10", "2020-11", "2020-12")
+
+milk_prices_2020 <- milk_prices_2020 %>%
+                 inner_join(milk_products_2020, by = c("Time"))
+
+milk_prices_2020
+
+milk_prices_2020 <- milk_prices_2020 %>%
+                    select(Time, Price, PoundsPer_1KGCheddar,
+                           PoundsPer_1TonCheddar, 
+                           Cheddar.Cheese.Production)
+
+transform(milk_prices_2020, PoundsPer_1TonCheddar = as.numeric(PoundsPer_1TonCheddar))
+
+milk_prices_2020
+
+milk_prices_2020 <- as.data.frame(milk_prices_2020)
+milk_prices_2020$Cheddar.Cheese.Production <- 
+as.numeric(milk_prices_2020$Cheddar.Cheese.Production)
+
+class(milk_prices_2020$PoundsPer_1TonCheddar)
+class(milk_prices_2020$Cheddar.Cheese.Production)
+
+milk_prices_2020$Cost <- milk_prices_2020$PoundsPer_1TonCheddar * milk_prices_2020$Cheddar.Cheese.Production
+
+sum(milk_prices_2020$Cost)
+
+milk_products_2019 <- as.data.frame(milk_products_2019)
+
+milk_products_2019$Time <- c("2019-01", "2019-02", "2019-03", "2019-04",
+                            "2019-05", "2019-06", "2019-07", "2019-08",
+                            "2019-09", "2019-10", "2019-11", "2019-12")
+
+milk_prices_2019 <- milk_prices_2019 %>%
+                 inner_join(milk_products_2019, by = c("Time"))
+
+milk_prices_2019 <- milk_prices_2019 %>%
+                    select(Time, Price, PoundsPer_1KGCheddar,
+                          PoundsPer_1TonCheddar, 
+                          Cheddar.Cheese.Production)
+
+transform(milk_prices_2019, PoundsPer_1TonCheddar = as.numeric(PoundsPer_1TonCheddar))
+
+milk_prices_2019
+
+# ---
+
+milk_prices_2019 <- as.data.frame(milk_prices_2019)
+milk_prices_2019$Cheddar.Cheese.Production <- 
+as.numeric(milk_prices_2019$Cheddar.Cheese.Production)
+
+class(milk_prices_2019$PoundsPer_1TonCheddar)
+class(milk_prices_2019$Cheddar.Cheese.Production)
+
+# ---
+
+milk_prices_2019$Cost <- milk_prices_2019$PoundsPer_1TonCheddar * milk_prices_2019$Cheddar.Cheese.Production
+
+sum(milk_prices_2019$Cost)
+
+milk_products_2018 <- as.data.frame(milk_products_2018)
+
+milk_products_2018$Time <- c("2018-01", "2018-02", "2018-03", "2018-04",
+                            "2018-05", "2018-06", "2018-07", "2018-08",
+                            "2018-09", "2018-10", "2018-11", "2018-12")
+
+milk_prices_2018 <- milk_prices_2018 %>%
+                 inner_join(milk_products_2018, by = c("Time"))
+
+milk_prices_2018 <- milk_prices_2018 %>%
+                    select(Time, Price, PoundsPer_1KGCheddar,
+                          PoundsPer_1TonCheddar, 
+                        Cheddar.Cheese.Production)
+
+transform(milk_prices_2018, PoundsPer_1TonCheddar = as.numeric(PoundsPer_1TonCheddar))
+
+milk_prices_2018
+
+# ---
+
+milk_prices_2018 <- as.data.frame(milk_prices_2018)
+milk_prices_2018$Cheddar.Cheese.Production <- 
+as.numeric(milk_prices_2018$Cheddar.Cheese.Production)
+
+class(milk_prices_2018$PoundsPer_1TonCheddar)
+class(milk_prices_2018$Cheddar.Cheese.Production)
+
+# ---
+
+milk_prices_2018$Cost <- milk_prices_2018$PoundsPer_1TonCheddar * milk_prices_2018$Cheddar.Cheese.Production
+
+sum(milk_prices_2018$Cost)
+
+milk_products_2017 <- as.data.frame(milk_products_2017)
+
+milk_products_2017$Time <- c("2017-01", "2017-02", "2017-03", "2017-04",
+                            "2017-05", "2017-06", "2017-07", "2017-08",
+                            "2017-09", "2017-10", "2017-11", "2017-12")
+
+milk_prices_2017 <- milk_prices_2017 %>%
+                 inner_join(milk_products_2017, by = c("Time"))
+
+milk_prices_2017 <- milk_prices_2017 %>%
+                    select(Time, Price, PoundsPer_1KGCheddar,
+                          PoundsPer_1TonCheddar, 
+                          Cheddar.Cheese.Production)
+
+transform(milk_prices_2017, PoundsPer_1TonCheddar = as.numeric(PoundsPer_1TonCheddar))
+
+milk_prices_2017
+
+# ---
+
+milk_prices_2017 <- as.data.frame(milk_prices_2017)
+milk_prices_2017$Cheddar.Cheese.Production <- 
+as.numeric(milk_prices_2017$Cheddar.Cheese.Production)
+
+class(milk_prices_2017$PoundsPer_1TonCheddar)
+class(milk_prices_2017$Cheddar.Cheese.Production)
+
+# ---
+
+milk_prices_2017$Cost <- milk_prices_2017$PoundsPer_1TonCheddar * milk_prices_2017$Cheddar.Cheese.Production
+
+sum(milk_prices_2017$Cost)
+
+milk_products_2016 <- as.data.frame(milk_products_2016)
+
+milk_products_2016$Time <- c("2016-01", "2016-02", "2016-03", "2016-04",
+                            "2016-05", "2016-06", "2016-07", "2016-08",
+                            "2016-09", "2016-10", "2016-11", "2016-12")
+
+milk_prices_2016 <- milk_prices_2016 %>%
+                 inner_join(milk_products_2016, by = c("Time"))
+
+milk_prices_2016 <- milk_prices_2016 %>%
+                    select(Time, Price, PoundsPer_1KGCheddar,
+                          PoundsPer_1TonCheddar, 
+                          Cheddar.Cheese.Production)
+
+transform(milk_prices_2016, PoundsPer_1TonCheddar = as.numeric(PoundsPer_1TonCheddar))
+
+milk_prices_2016
+
+# ---
+
+milk_prices_2016 <- as.data.frame(milk_prices_2016)
+milk_prices_2016$Cheddar.Cheese.Production <- 
+as.numeric(milk_prices_2016$Cheddar.Cheese.Production)
+
+class(milk_prices_2016$PoundsPer_1TonCheddar)
+class(milk_prices_2016$Cheddar.Cheese.Production)
+
+# ---
+
+milk_prices_2016$Cost <- milk_prices_2016$PoundsPer_1TonCheddar * milk_prices_2016$Cheddar.Cheese.Production
+
+sum(milk_prices_2016$Cost)
+
+milk_products_2015 <- as.data.frame(milk_products_2015)
+
+milk_products_2015$Time <- c("2015-01", "2015-02", "2015-03", "2015-04",
+                            "2015-05", "2015-06", "2015-07", "2015-08",
+                            "2015-09", "2015-10", "2015-11", "2015-12")
+
+milk_prices_2015 <- milk_prices_2015 %>%
+                 inner_join(milk_products_2015, by = c("Time"))
+
+milk_prices_2015 <- milk_prices_2015 %>%
+                    select(Time, Price, PoundsPer_1KGCheddar,
+                          PoundsPer_1TonCheddar, 
+                          Cheddar.Cheese.Production)
+
+transform(milk_prices_2015, PoundsPer_1TonCheddar = as.numeric(PoundsPer_1TonCheddar))
+
+milk_prices_2015
+
+# ---
+
+milk_prices_2015 <- as.data.frame(milk_prices_2015)
+milk_prices_2015$Cheddar.Cheese.Production <- 
+as.numeric(milk_prices_2015$Cheddar.Cheese.Production)
+
+class(milk_prices_2015$PoundsPer_1TonCheddar)
+class(milk_prices_2015$Cheddar.Cheese.Production)
+
+# ---
+
+milk_prices_2015$Cost <- milk_prices_2015$PoundsPer_1TonCheddar * milk_prices_2015$Cheddar.Cheese.Production
+
+sum(milk_prices_2015$Cost)
+
+Year <- c("2015", "2016", "2017", "2018", "2019", "2020")
+Cost <- c("702651920", "666635425", "887977635", "922553075", "896657880", "836934800")
+
+annual_cost <- data.frame(Year, Cost)
+annual_cost$Year <- as.numeric(annual_cost$Year)
+annual_cost$Cost <- as.numeric(annual_cost$Cost)
+annual_cost
