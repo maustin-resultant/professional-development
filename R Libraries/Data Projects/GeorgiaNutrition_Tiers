@@ -1,0 +1,80 @@
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
+
+# Read in the data
+SponsorData <- read.csv("/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/sponsordata (1).csv")
+SiteData <- read.csv("/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/sitedata.csv")
+
+SiteData$cap_all <- SiteData$cap_bfast + SiteData$cap_amsnack + SiteData$cap_lunch 
+                    + SiteData$cap_pmsnack + SiteData$cap_supper
+
+SiteData$cap_all <- as.numeric(SiteData$cap_all)
+
+Count_SitesPerSponsor = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  summarise(count_sites = n_distinct(name_site)) 
+
+TotalMeals_PerSponsor = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  summarise(total_cap = sum(cap_all))
+
+SponsorClusters = Count_SitesPerSponsor %>%
+inner_join(TotalMeals_PerSponsor, by = "name_sponsor.x")
+
+
+
+within(SponsorClusters, SponsorClusters$tier <- ifelse(cap_all < 2200, 1, 
+                                                ifelse(2199 < cap_all < 6200, 2,
+                                                ifelse(6199 < cap_all < 14200, 3,
+                                                ifelse(14199 < cap_all < 30000, 4,
+                                                ifelse(29999 < cap_all, 5))))))
+
+
+SponsorClusters$tier <- SponsorClusters$total_cap
+SponsorClusters$tier[SponsorClusters$total_cap < 2200] <- 1
+SponsorClusters$tier[SponsorClusters$total_cap > 2199 & SponsorClusters$total_cap < 6200] <- 2
+SponsorClusters$tier[SponsorClusters$total_cap > 6199 & SponsorClusters$total_cap < 14200] <- 3
+SponsorClusters$tier[SponsorClusters$total_cap > 14199 & SponsorClusters$total_cap < 30000] <- 4
+SponsorClusters$tier[SponsorClusters$total_cap > 29999] <- 5
+
+library("writexl")
+write_xlsx(SponsorClusters,"/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/SponsorClusters_WithTiers.xlsx")
+
+
+
+SponsorClusters <- SponsorClusters %>% mutate(id = row_number())
+
+SponsorClusters_AlgorithimVariables = SponsorClusters %>%
+  select(count_sites, total_cap)
+
+wss <- 0
+
+SponsorClusters_AlgorithimVariables <- do.call(data.frame, lapply(SponsorClusters_AlgorithimVariables, function(x) replace(x, is.infinite(x), NA)))
+SponsorClusters_AlgorithimVariables <- do.call(data.frame, lapply(SponsorClusters_AlgorithimVariables, function(x) replace(x, is.na(x), 0)))
+SponsorClusters_AlgorithimVariables <- do.call(data.frame, lapply(SponsorClusters_AlgorithimVariables, function(x) replace(x, is.nan(x), 0)))
+
+for (i in 1:100) {
+  km.out <- kmeans(SponsorClusters_AlgorithimVariables, centers = i, nstart = 20)
+  wss[i] <- km.out$tot.withinss
+}
+
+plot(1:100, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares",
+     xlim = c(1,20))
+
+SponsorClusters <- do.call(data.frame, lapply(SponsorClusters, function(x) replace(x, is.infinite(x), NA)))
+SponsorClusters <- do.call(data.frame, lapply(SponsorClusters, function(x) replace(x, is.na(x), 0)))
+SponsorClusters <- do.call(data.frame, lapply(SponsorClusters, function(x) replace(x, is.nan(x), 0)))
+
+
+kmean <- kmeans(SponsorClusters, 5)
+kmean$centers
+kmeansRes<-factor(kmean$cluster)
+SponsorClusters$cluster <- kmean$cluster
+
+
+library("writexl")
+write_xlsx(SponsorClusters,"/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/SponsorClusters.xlsx")
