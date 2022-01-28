@@ -1,0 +1,336 @@
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
+
+# Read in the data
+SponsorData <- read.csv("/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/sponsordata (1).csv")
+SiteData <- read.csv("/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/sitedata.csv")
+
+sum(is.na(SponsorData$perc_all))
+
+SponsorData <- do.call(data.frame, lapply(SponsorData, function(x) replace(x, is.infinite(x), NA)))
+SponsorData <- do.call(data.frame, lapply(SponsorData, function(x) replace(x, is.na(x), 0)))                             
+median(SponsorData$perc_all, na.rm = FALSE)
+
+within(SiteData, SiteData$tier <- ifelse(a<5, a, 
+                          ifelse(a==5, 0,
+                                 ifelse(a==6,b,NA))) )
+
+
+                              # /*\ BEGIN SPONSOR DATA ANALYSIS /*\
+
+SponsorData <- SponsorData %>% mutate(id = row_number())
+
+# Create the dataset to run clustering on
+wss <- 0
+
+drop <- c("year","name_sponsor")
+SponsorData_Clusters = SponsorData[,!(names(SponsorData) %in% drop)]
+SponsorData_Clusters <- SponsorData_Clusters %>% mutate(id = row_number())
+
+# Remove infinites, NaNs, and NA values
+SponsorData_Clusters <- do.call(data.frame, lapply(SponsorData_Clusters, function(x) replace(x, is.infinite(x), NA)))
+SponsorData_Clusters <- do.call(data.frame, lapply(SponsorData_Clusters, function(x) replace(x, is.na(x), 0)))
+SponsorData_Clusters <- do.call(data.frame, lapply(SponsorData_Clusters, function(x) replace(x, is.nan(x), 0)))
+SponsorData_Clusters <- SponsorData_Clusters[complete.cases(SponsorData_Clusters),]
+
+# K-means clustering for Sponsor data
+for (i in 1:3) {
+  km.out <- kmeans(SponsorData_Clusters, centers = i, nstart = 20)
+  wss[i] <- km.out$tot.withinss
+}
+
+plot(1:3, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+# 2 clusters
+
+# Add clusters to _clusters dataset
+kmean <- kmeans(SponsorData_Clusters, 2)
+kmean$centers
+kmeansRes<-factor(kmean$cluster)
+SponsorData_Clusters$cluster <- kmean$cluster
+
+# Build the model
+k <- 2
+km.out <- kmeans(SponsorData_Clusters, centers = k, nstart = 20, iter.max = 50)
+km.out
+
+options(scipen=999)
+SponsorPlot <- plot(SponsorData_Clusters[, c("poss_all", "actual_all")],
+     col = km.out$cluster,
+     main = paste("k-Means Clustering of Sponsor Data with", k, "Clusters"),
+     xlab = "Possible", ylab = "Actual")
+format(SponsorPlot, scientific = FALSE)
+SponsorPlot
+
+# Add clusters to Sponsors dataset
+SponsorData = merge(x=SponsorData,y=SponsorData_Clusters,by="id",all=TRUE)
+SponsorData = SponsorData %>% drop_na(cluster)
+
+SponsorData_Cluster2 = SponsorData %>%
+  select(id, year, name_sponsor, poss_all.x, actual_all.x, cluster) %>%
+  filter(cluster == 2)
+
+
+                                # /*\ BEGIN SITE DATA ANALYSIS /*\
+
+# Set Unique IDs for JOIN later
+SiteData <- SiteData %>% mutate(id = row_number())
+
+
+# Create the dataset to run clustering on
+wss <- 0
+SiteData_Clusters <- SiteData %>%
+  select(poss_all, actual_all, meal_cost)
+SiteData_Clusters <- SiteData_Clusters %>% mutate(id = row_number())
+
+# Remove infinites, NaNs, and NA values
+SiteData_Clusters <- do.call(data.frame, lapply(SiteData_Clusters, function(x) replace(x, is.infinite(x), NA)))
+SiteData_Clusters <- SiteData_Clusters[complete.cases(SiteData_Clusters),]
+
+# K-means clustering for Sponsor data
+for (i in 1:14) {
+  km.out <- kmeans(SiteData_Clusters, centers = i, nstart = 20)
+  wss[i] <- km.out$tot.withinss
+}
+
+plot(1:14, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+# 4 clusters
+
+# Add clusters to _clusters dataset
+kmean <- kmeans(SiteData_Clusters, 4)
+kmean$centers
+kmeansRes<-factor(kmean$cluster)
+SiteData_Clusters$cluster <- kmean$cluster
+
+# Build the model
+k <- 4
+km.out <- kmeans(SiteData_Clusters, centers = k, nstart = 20, iter.max = 50)
+km.out
+
+plot(SiteData_Clusters[, c("poss_all", "actual_all")],
+     col = km.out$cluster,
+     main = paste("K-Means Clustering of Site Data with", k, "Clusters"),
+     xlab = "Possible", ylab = "Actual")
+
+# Join the data
+SiteData = merge(x=SiteData,y=SiteData_Clusters,by="id",all=TRUE)
+SiteData = SiteData %>% drop_na(cluster)
+
+colnames(SiteData)
+
+SiteData_ColsToDrop <- SiteData %>%
+  select(ends_with(".y"))
+
+SiteData = SiteData[,!(names(SiteData) %in% SiteData_ColsToDrop)]
+
+
+
+                                # /*\ BEGIN REGRESSION ANALYSIS /*\
+
+
+
+# Data Prep and Cleaning
+
+SiteData <- do.call(data.frame, lapply(SiteData, function(x) replace(x, is.infinite(x), NA)))
+SiteData <- do.call(data.frame, lapply(SiteData, function(x) replace(x, is.na(x), 0)))
+SiteData <- do.call(data.frame, lapply(SiteData, function(x) replace(x, is.nan(x), 0)))
+
+SiteData %>% 
+  count(primary_service)
+
+SiteData["primary_service"][SiteData["primary_service"] 
+                                            == "Food Service Only"] <- "1"
+SiteData["primary_service"][SiteData["primary_service"] 
+                                            == "Recreation"] <- "2"
+SiteData["primary_service"][SiteData["primary_service"] 
+                                            == "Other"] <- "3"
+SiteData["primary_service"][SiteData["primary_service"] 
+                                            == ""] <- "4"
+SiteData["primary_service"][SiteData["primary_service"] 
+                                            == "School"] <- "5"
+SiteData["primary_service"][SiteData["primary_service"] 
+                                            == "Religious"] <- "6"
+SiteData["primary_service"][SiteData["primary_service"] 
+                                            == "Emergency Shelter"] <- "7"
+SiteData["primary_service"][SiteData["primary_service"] 
+                                            == "Not Applicable"] <- "8"
+
+
+SiteData %>% 
+  count(urbanicity)
+
+SiteData["urbanicity"][SiteData["urbanicity"] 
+                                       == "Urban"] <- "1"
+SiteData["urbanicity"][SiteData["urbanicity"] 
+                                       == "Rural"] <- "2"
+SiteData["urbanicity"][SiteData["urbanicity"] 
+                                       == ""] <- "3"
+
+
+SiteData %>% 
+  count(site_type)
+
+SiteData["site_type"][SiteData["site_type"] 
+                                      == "Open"] <- "1"
+SiteData["site_type"][SiteData["site_type"] 
+                                      == ""] <- "2"
+SiteData["site_type"][SiteData["site_type"] 
+                                      == "Closed - Needy"] <- "3"
+SiteData["site_type"][SiteData["site_type"] 
+                                      == "Closed - Enrolled"] <- "4"
+SiteData["site_type"][SiteData["site_type"] 
+                                      == "Restricted Open"] <- "5"
+SiteData["site_type"][SiteData["site_type"] 
+                                      == "Closed - Non-Needy"] <- "6"
+SiteData["site_type"][SiteData["site_type"] 
+                                      == "NYSP"] <- "7"
+
+
+SiteData %>% 
+  count(eligibility_method)
+
+SiteData["eligibility_method"][SiteData["eligibility_method"] 
+                                               == "School Data"] <- "1"
+SiteData["eligibility_method"][SiteData["eligibility_method"] 
+                                               == ""] <- "2"
+SiteData["eligibility_method"][SiteData["eligibility_method"] 
+                                               == "Census Data"] <- "3"
+SiteData["eligibility_method"][SiteData["eligibility_method"] 
+                                               == "Housing Authority ormation"] <- "4"
+SiteData["eligibility_method"][SiteData["eligibility_method"] 
+                                               == "Income Applications"] <- "5"
+SiteData["eligibility_method"][SiteData["eligibility_method"] 
+                                               == "Shared School Eligibility ormation"] <- "6"
+
+
+SiteData %>% 
+  count(service_method)
+
+SiteData["service_method"][SiteData["service_method"] 
+                                           == "Receive meals from central kitchen"] <- "1"
+SiteData["service_method"][SiteData["service_method"] 
+                                           == "Vended by Food Service Management Company (FSMC)"] <- "2"
+SiteData["service_method"][SiteData["service_method"] 
+                                           == ""] <- "3"
+SiteData["service_method"][SiteData["service_method"] 
+                                           == "Self-Prep – Prepares for multiple sites"] <- "4"
+SiteData["service_method"][SiteData["service_method"] 
+                                           == "Self-Prep - Prepare for this site only"] <- "5"
+SiteData["service_method"][SiteData["service_method"] 
+                                           == "Vended by School Food Authority (SFA)"] <- "6"
+
+
+SiteData %>% 
+  count(location_type)
+
+SiteData["location_type"][SiteData["location_type"] 
+                                          == ""] <- "1"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Apartment Community Center"] <- "2"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Art Center"] <- "3"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Cafeteria"] <- "4"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Campsite"] <- "5"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Child Care Center"] <- "6"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Church"] <- "7"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Clubhouse"] <- "8"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Dining Hall"] <- "9"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Field"] <- "10"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Football Field"] <- "11"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Gazebo"] <- "12"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Gym"] <- "13"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Housing and Urban Development"] <- "14"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Housing Authority"] <- "15"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Library"] <- "16"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Lodge Hall"] <- "17"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Lunch Room"] <- "18"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Mobile"] <- "19"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Neighborhood Center"] <- "20"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Other"] <- "21"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Park"] <- "22"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Parking Lot"] <- "23"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Picnic Area"] <- "24"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Playground"] <- "25"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Private Resident House"] <- "26"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Recreation Center"] <- "27"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Trailer Park"] <- "28"
+SiteData["location_type"][SiteData["location_type"] 
+                                          == "Yard"] <- "29"
+
+
+SiteData %>% 
+  count(service_system)
+
+SiteData["service_system"][SiteData["service_system"] 
+                                           == "Individual Meals"] <- "1"
+SiteData["service_system"][SiteData["service_system"] 
+                                           == "Cafeteria Style"] <- "2"
+SiteData["service_system"][SiteData["service_system"] 
+                                           == ""] <- "3"
+SiteData["service_system"][SiteData["service_system"] 
+                                           == "Offer vs. Serve"] <- "4"
+SiteData["service_system"][SiteData["service_system"] 
+                                           == "Other (provide explanation)"] <- "5"
+
+
+# Modeling
+
+
+DecalNutrition_FlagCalc <- lm(fl_g90 ~ 
+                                 poss_all.x +
+                                 actual_all.x +
+                                 dollars +
+                                 days_bfast +
+                                 days_lunch +
+                                 days_pmsnack +
+                                 days_supper +
+                                 meal_cost.x +
+                                 poss_lunch +
+                                 actual_bfast +
+                                 actual_amsnack +
+                                 actual_pmsnack +
+                                 cap_amsnack +
+                                 cap_lunch +
+                                 cap_pmsnack +
+                                 cap_supper +
+                                 primary_service +
+                                 urbanicity +
+                                 site_type +
+                                 eligibility_method +
+                                 service_method +
+                                 location_type, data = SiteData)
+print(summary(DecalNutrition_FlagCalc))
+
+AIC(DecalNutrition_FlagCalc)
