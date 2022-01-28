@@ -2,4 +2,13 @@ Familiarity/Fluency in the Following Libraries:
 
   * dplyr                   
   * gapminder               
-  * ggplot2                 
+  * ggplot2  
+  * tidyverse
+  * shiny
+  * readr
+  * testthat
+  * stringr
+  * plotly
+  * RColorBrewer
+  * leaflet
+  * mapsapi
