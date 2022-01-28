@@ -1,0 +1,439 @@
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
+
+# Read in the data
+SponsorData <- read.csv("/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/sponsordata (1).csv")
+SiteData <- read.csv("/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/sitedata.csv")
+
+# Filter data to >= 0.9 
+
+SponsorData <- SponsorData %>%
+  filter(perc_all >= 0.9)
+
+SiteData <- SiteData %>%
+  filter(perc_all >= 0.9)
+
+
+
+                            # /*\ BEGIN SPONSOR DATA ANALYSIS /*\
+
+
+
+SponsorData <- do.call(data.frame, lapply(SponsorData, function(x) replace(x, is.infinite(x), NA)))
+SponsorData <- do.call(data.frame, lapply(SponsorData, function(x) replace(x, is.na(x), 0)))
+SponsorData <- do.call(data.frame, lapply(SponsorData, function(x) replace(x, is.nan(x), 0)))
+SponsorData <- SponsorData[complete.cases(SponsorData),]
+SponsorData <- SponsorData %>% mutate(id = row_number())
+
+drop <- c("year","name_sponsor")
+SponsorData_Clusters = SponsorData[,!(names(SponsorData) %in% drop)]
+SponsorData_Clusters <- SponsorData_Clusters %>% mutate(id = row_number())
+
+for (i in 1:15) {
+  km.out <- kmeans(SponsorData_Clusters, centers = i, nstart = 20)
+  wss[i] <- km.out$tot.withinss
+}
+
+plot(1:15, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+kmean <- kmeans(SponsorData_Clusters, 2)
+kmean$centers
+kmeansRes<-factor(kmean$cluster)
+SponsorData_Clusters$cluster <- kmean$cluster
+
+k <- 2
+km.out <- kmeans(SponsorData_Clusters, centers = k, nstart = 20, iter.max = 50)
+km.out
+
+plot(SponsorData_Clusters[, c("poss_all", "actual_all")],
+     col = km.out$cluster,
+     main = paste("k-Means Clustering of Sponsor Data with", k, "Clusters"),
+     xlab = "Possible", ylab = "Actual")
+
+SponsorData = merge(x=SponsorData,y=SponsorData_Clusters,by="id",all=TRUE)
+SponsorData = SponsorData %>% drop_na(cluster)
+
+SponsorData_ClusterFindings = SponsorData %>%
+  select(id, year, name_sponsor, poss_all.x, actual_all.x, perc_all.x, cluster)
+
+
+
+                                # /*\ BEGIN SITE DATA ANALYSIS /*\
+
+
+
+SiteData <- do.call(data.frame, lapply(SiteData, function(x) replace(x, is.infinite(x), NA)))
+SiteData <- do.call(data.frame, lapply(SiteData, function(x) replace(x, is.na(x), 0)))
+SiteData <- do.call(data.frame, lapply(SiteData, function(x) replace(x, is.nan(x), 0)))
+SiteData <- SiteData[complete.cases(SiteData),]
+SiteData <- SiteData %>% mutate(id = row_number())
+
+drop <- c("year","name_sponsor.x", "name_site", "address_site", "fl_g90", 
+          "fl_site.y", "name_sponsor.y", "agree_nbr", "primary_service",
+          "urbanicity", "site_type", "eligibility_method", "service_method", "location_type",
+          "service_system")
+SiteData_Clusters = SiteData[,!(names(SiteData) %in% drop)]
+SiteData_Clusters <- SiteData_Clusters %>% mutate(id = row_number())
+
+for (i in 1:653) {
+  km.out <- kmeans(SiteData_Clusters, centers = i, nstart = 20)
+  wss[i] <- km.out$tot.withinss
+}
+
+plot(1:653, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+kmean <- kmeans(SiteData_Clusters, 5)
+kmean$centers
+kmeansRes<-factor(kmean$cluster)
+SiteData_Clusters$cluster <- kmean$cluster
+
+k <- 5
+km.out <- kmeans(SiteData_Clusters, centers = k, nstart = 20, iter.max = 50)
+km.out
+
+plot(SiteData_Clusters[, c("poss_all", "actual_all")],
+     col = km.out$cluster,
+     main = paste("k-Means Clustering of Site Data with", k, "Clusters"),
+     xlab = "Possible", ylab = "Actual")
+
+SiteData = merge(x=SiteData,y=SiteData_Clusters,by="id",all=TRUE)
+SiteData = SiteData %>% drop_na(cluster)
+
+SiteData_ClusterFindings = SiteData %>%
+  select(id, year, name_sponsor.x, name_site, address_site, poss_all.x, 
+         actual_all.x, perc_all.x, dollars.x, days_bfast.x, days_amsnack.x, 
+         days_lunch.x, days_pmsnack.x, days_supper.x, meal_cost.x, cap_bfast.x, cap_amsnack.x,
+         cap_lunch.x, cap_pmsnack.x, cap_supper.x, poss_bfast.x, poss_amsnack.x, poss_lunch.x,
+         poss_pmsnack.x, poss_supper.x, actual_bfast.x, actual_amsnack.x, actual_lunch.x,
+         actual_pmsnack.x, actual_supper.x, cluster, primary_service,
+         urbanicity, site_type, eligibility_method, service_method, location_type,
+         service_system)
+
+
+
+                            # /*\ ADDITIONAL ANALYSIS /*\
+
+
+
+SponsorData_ClusterFindings %>% 
+  count(name_sponsor)
+
+Count_SponsorsPerSites <- SiteData_ClusterFindings %>% 
+  count(name_sponsor.x)
+
+
+
+                          # /*\ BEGIN REGRESSION ANALYSIS /*\
+
+
+
+# Data Prep and Cleaning
+
+SiteData_ClusterFindings %>% 
+  count(primary_service)
+
+SiteData_ClusterFindings["primary_service"][SiteData_ClusterFindings["primary_service"] 
+                                        == "Food Service Only"] <- "1"
+SiteData_ClusterFindings["primary_service"][SiteData_ClusterFindings["primary_service"] 
+                                        == "Recreation"] <- "2"
+SiteData_ClusterFindings["primary_service"][SiteData_ClusterFindings["primary_service"] 
+                                        == "Other"] <- "3"
+SiteData_ClusterFindings["primary_service"][SiteData_ClusterFindings["primary_service"] 
+                                        == ""] <- "4"
+SiteData_ClusterFindings["primary_service"][SiteData_ClusterFindings["primary_service"] 
+                                        == "School"] <- "5"
+SiteData_ClusterFindings["primary_service"][SiteData_ClusterFindings["primary_service"] 
+                                        == "Religious"] <- "6"
+SiteData_ClusterFindings["primary_service"][SiteData_ClusterFindings["primary_service"] 
+                                        == "Emergency Shelter"] <- "7"
+SiteData_ClusterFindings["primary_service"][SiteData_ClusterFindings["primary_service"] 
+                                        == "Not Applicable"] <- "8"
+
+
+SiteData_ClusterFindings %>% 
+  count(urbanicity)
+
+SiteData_ClusterFindings["urbanicity"][SiteData_ClusterFindings["urbanicity"] 
+                                            == "Urban"] <- "1"
+SiteData_ClusterFindings["urbanicity"][SiteData_ClusterFindings["urbanicity"] 
+                                            == "Rural"] <- "2"
+SiteData_ClusterFindings["urbanicity"][SiteData_ClusterFindings["urbanicity"] 
+                                            == ""] <- "3"
+
+
+SiteData_ClusterFindings %>% 
+  count(site_type)
+
+SiteData_ClusterFindings["site_type"][SiteData_ClusterFindings["site_type"] 
+                                       == "Open"] <- "1"
+SiteData_ClusterFindings["site_type"][SiteData_ClusterFindings["site_type"] 
+                                       == ""] <- "2"
+SiteData_ClusterFindings["site_type"][SiteData_ClusterFindings["site_type"] 
+                                       == "Closed - Needy"] <- "3"
+SiteData_ClusterFindings["site_type"][SiteData_ClusterFindings["site_type"] 
+                                       == "Closed - Enrolled"] <- "4"
+SiteData_ClusterFindings["site_type"][SiteData_ClusterFindings["site_type"] 
+                                       == "Restricted Open"] <- "5"
+SiteData_ClusterFindings["site_type"][SiteData_ClusterFindings["site_type"] 
+                                       == "Closed - Non-Needy"] <- "6"
+SiteData_ClusterFindings["site_type"][SiteData_ClusterFindings["site_type"] 
+                                       == "NYSP"] <- "7"
+
+
+SiteData_ClusterFindings %>% 
+  count(eligibility_method)
+
+SiteData_ClusterFindings["eligibility_method"][SiteData_ClusterFindings["eligibility_method"] 
+                                      == "School Data"] <- "1"
+SiteData_ClusterFindings["eligibility_method"][SiteData_ClusterFindings["eligibility_method"] 
+                                      == ""] <- "2"
+SiteData_ClusterFindings["eligibility_method"][SiteData_ClusterFindings["eligibility_method"] 
+                                      == "Census Data"] <- "3"
+SiteData_ClusterFindings["eligibility_method"][SiteData_ClusterFindings["eligibility_method"] 
+                                      == "Housing Authority ormation"] <- "4"
+SiteData_ClusterFindings["eligibility_method"][SiteData_ClusterFindings["eligibility_method"] 
+                                      == "Income Applications"] <- "5"
+SiteData_ClusterFindings["eligibility_method"][SiteData_ClusterFindings["eligibility_method"] 
+                                      == "Shared School Eligibility ormation"] <- "6"
+
+
+SiteData_ClusterFindings %>% 
+  count(service_method)
+
+SiteData_ClusterFindings["service_method"][SiteData_ClusterFindings["service_method"] 
+                                               == "Receive meals from central kitchen"] <- "1"
+SiteData_ClusterFindings["service_method"][SiteData_ClusterFindings["service_method"] 
+                                               == "Vended by Food Service Management Company (FSMC)"] <- "2"
+SiteData_ClusterFindings["service_method"][SiteData_ClusterFindings["service_method"] 
+                                               == ""] <- "3"
+SiteData_ClusterFindings["service_method"][SiteData_ClusterFindings["service_method"] 
+                                               == "Self-Prep – Prepares for multiple sites"] <- "4"
+SiteData_ClusterFindings["service_method"][SiteData_ClusterFindings["service_method"] 
+                                               == "Self-Prep - Prepare for this site only"] <- "5"
+SiteData_ClusterFindings["service_method"][SiteData_ClusterFindings["service_method"] 
+                                               == "Vended by School Food Authority (SFA)"] <- "6"
+
+
+SiteData_ClusterFindings %>% 
+  count(location_type)
+
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                           == ""] <- "1"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                           == "Apartment Community Center"] <- "2"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                           == "Art Center"] <- "3"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                           == "Cafeteria"] <- "4"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                           == "Campsite"] <- "5"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                           == "Child Care Center"] <- "6"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Church"] <- "7"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Clubhouse"] <- "8"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Dining Hall"] <- "9"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Field"] <- "10"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Football Field"] <- "11"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Gazebo"] <- "12"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Gym"] <- "13"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Housing and Urban Development"] <- "14"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Housing Authority"] <- "15"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Library"] <- "16"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Lodge Hall"] <- "17"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Lunch Room"] <- "18"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Mobile"] <- "19"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Neighborhood Center"] <- "20"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Other"] <- "21"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Park"] <- "22"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Parking Lot"] <- "23"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Picnic Area"] <- "24"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Playground"] <- "25"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Private Resident House"] <- "26"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Recreation Center"] <- "27"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Trailer Park"] <- "28"
+SiteData_ClusterFindings["location_type"][SiteData_ClusterFindings["location_type"] 
+                                          == "Yard"] <- "29"
+
+
+SiteData_ClusterFindings %>% 
+  count(service_system)
+
+SiteData_ClusterFindings["service_system"][SiteData_ClusterFindings["service_system"] 
+                                          == "Individual Meals"] <- "1"
+SiteData_ClusterFindings["service_system"][SiteData_ClusterFindings["service_system"] 
+                                          == "Cafeteria Style"] <- "2"
+SiteData_ClusterFindings["service_system"][SiteData_ClusterFindings["service_system"] 
+                                          == ""] <- "3"
+SiteData_ClusterFindings["service_system"][SiteData_ClusterFindings["service_system"] 
+                                          == "Offer vs. Serve"] <- "4"
+SiteData_ClusterFindings["service_system"][SiteData_ClusterFindings["service_system"] 
+                                          == "Other (provide explanation)"] <- "5"
+
+
+# Modeling
+
+DecalNutrition_90 <- lm(SiteData_ClusterFindings$perc_all.x ~ 
+                          SiteData_ClusterFindings$poss_all.x +
+                          SiteData_ClusterFindings$actual_all.x +
+                          SiteData_ClusterFindings$primary_service + 
+                          SiteData_ClusterFindings$urbanicity + 
+                          SiteData_ClusterFindings$site_type + 
+                          SiteData_ClusterFindings$eligibility_method + 
+                          SiteData_ClusterFindings$service_method + 
+                          SiteData_ClusterFindings$location_type + 
+                          SiteData_ClusterFindings$service_system)
+print(summary(DecalNutrition_90))
+
+
+res <- model.matrix(~primary_service, data = SiteData_ClusterFindings)
+head(res[, -1])
+
+res <- model.matrix(~urbanicity, data = SiteData_ClusterFindings)
+head(res[, -1])
+
+res <- model.matrix(~site_type, data = SiteData_ClusterFindings)
+head(res[, -1])
+
+res <- model.matrix(~eligibility_method, data = SiteData_ClusterFindings)
+head(res[, -1])
+
+res <- model.matrix(~service_method, data = SiteData_ClusterFindings)
+head(res[, -1])
+
+res <- model.matrix(~location_type, data = SiteData_ClusterFindings)
+head(res[, -1])
+
+res <- model.matrix(~service_system, data = SiteData_ClusterFindings)
+head(res[, -1])
+
+DecalNutrition_90 <- glm(perc_all.x ~ 
+                          poss_all.x +
+                          actual_all.x +
+                          days_lunch.x +
+                          days_pmsnack.x +
+                          days_supper.x +
+                          meal_cost.x +
+                          poss_lunch.x +
+                          poss_pmsnack.x +
+                          actual_lunch.x +
+                          actual_pmsnack.x, data = SiteData_ClusterFindings)
+print(summary(DecalNutrition_90))
+
+
+FamilySupportCircle <- SiteData %>%
+  filter(name_sponsor.x == 'Family Support Circle, Inc.')
+
+sum(FamilySupportCircle$dollars)
+
+WashingtonWilkes <- SiteData %>%
+  filter(name_sponsor.x == 'Washington-Wilkes Parks & Rec.')
+
+sum(WashingtonWilkes$dollars)
+
+CommunityImprovement <- SiteData %>%
+  filter(name_sponsor.x == 'Community Improvement Coalition of Monroe County, Inc.')
+
+sum(CommunityImprovement$dollars)
+
+HolyGhost <- SiteData %>%
+  filter(name_sponsor.x == 'HolyGhost Pastured Ministries, Inc.')
+
+sum(HolyGhost$dollars)
+
+YouthServ <- SiteData %>%
+  filter(name_sponsor.x == 'Youth Serv360, Inc.')
+
+sum(YouthServ$dollars)
+
+
+Cluster1_Dollars <- c(53442.8, 2146.2, 32210.93, 9230.81, 11442.64)
+mean(Cluster1_Dollars)
+
+
+Wadley <- SiteData %>%
+  filter(name_sponsor.x == 'City of Wadley')
+
+sum(Wadley$dollars)
+
+MotivatedByPeople <- SiteData %>%
+  filter(name_sponsor.x == 'Motivated By People Community Foundation Inc.')
+
+sum(MotivatedByPeople$dollars)
+
+Naji <- SiteData %>%
+  filter(name_sponsor.x == 'Naji Foundation, Inc.')
+
+sum(Naji$dollars)
+
+Thrive <- SiteData %>%
+  filter(name_sponsor.x == 'THRIVE Christian Academy')
+
+sum(Thrive$dollars)
+
+Aryeetey <- SiteData %>%
+  filter(name_sponsor.x == 'Aryeetey Loving Heart Foundation, Inc.')
+
+sum(Aryeetey$dollars)
+
+ReconstructiongYouth <- SiteData %>%
+  filter(name_sponsor.x == 'Reconstructing Youth Foundation, Inc.')
+
+sum(ReconstructiongYouth$dollars)
+
+JohnWilliams <- SiteData %>%
+  filter(name_sponsor.x == 'John W Williams Corporation')
+
+sum(JohnWilliams$dollars)
+
+Cluster2_Dollars <- c(99031.72, 228800.4, 153103.3, 87463.47, 336380.3, 261598.3, 342326.1)
+mean(Cluster2_Dollars)
+
+target <-c('Family Support Circle, Inc.',
+           'Washington-Wilkes Parks & Rec.',
+           'Community Improvement Coalition of Monroe County, Inc.',
+           'HolyGhost Pastured Ministries, Inc.', 
+           'Youth Serv360, Inc.',
+           'City of Wadley',
+           'Motivated By People Community Foundation Inc.',
+           'Naji Foundation, Inc.',
+           'THRIVE Christian Academy',
+           'Aryeetey Loving Heart Foundation, Inc.',
+           'Reconstructing Youth Foundation, Inc.',
+           'John W Williams Corporation')
+
+UrbanVersusRural <- SiteData %>%
+  filter(name_sponsor.x %in% target)
+
+UrbanVersusRural %>% 
+  count(urbanicity)
+
+mean(UrbanVersusRural$dollars[UrbanVersusRural$urbanicity=='Urban'])
+mean(UrbanVersusRural$dollars[UrbanVersusRural$urbanicity=='Rural'])
