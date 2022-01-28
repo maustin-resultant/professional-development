@@ -1,0 +1,228 @@
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
+library("writexl")
+
+# Read in the data
+SponsorData <- read.csv("/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/sponsordata (1).csv")
+SiteData <- read.csv("/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/sitedata.csv")
+
+SiteData$cap_all <- SiteData$cap_bfast + SiteData$cap_amsnack + SiteData$cap_lunch 
++ SiteData$cap_pmsnack + SiteData$cap_supper
+
+SiteData$cap_all <- as.numeric(SiteData$cap_all)
+
+                                          # /*\ 2017 ANALYSIS /*\
+
+Count_SitesPerSponsor_2017 = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  filter(year == '2017') %>%
+  summarise(count_sites = n_distinct(name_site))
+  
+
+TotalMeals_PerSponsor_2017 = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  filter(year == '2017') %>%
+  summarise(total_cap = sum(cap_all))
+
+SponsorClusters_2017 = Count_SitesPerSponsor_2017 %>%
+  inner_join(TotalMeals_PerSponsor_2017, by = "name_sponsor.x")
+
+SponsorClusters_2017_Numeric = SponsorClusters_2017 %>%
+  select(count_sites, total_cap)
+
+wss <- 0
+
+for (i in 1:80) {
+  km.out <- kmeans(SponsorClusters_2017_Numeric, centers = i, nstart = 20)
+  wss[i] <- km.out$tot.withinss
+}
+
+plot(1:80, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+kmean <- kmeans(SponsorClusters_2017_Numeric, 5)
+kmean$centers
+kmeansRes<-factor(kmean$cluster)
+SponsorClusters_2017_Numeric$cluster <- kmean$cluster
+
+write_xlsx(SponsorClusters_2017_Numeric,"/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/SponsorClusters_2017.xlsx")
+
+
+                                              # /*\ 2018 ANALYSIS /*\
+
+
+Count_SitesPerSponsor_2018 = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  filter(year == '2018') %>%
+  summarise(count_sites = n_distinct(name_site))
+
+
+TotalMeals_PerSponsor_2018 = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  filter(year == '2018') %>%
+  summarise(total_cap = sum(cap_all))
+
+SponsorClusters_2018 = Count_SitesPerSponsor_2018 %>%
+  inner_join(TotalMeals_PerSponsor_2018, by = "name_sponsor.x")
+
+SponsorClusters_2018_Numeric = SponsorClusters_2018 %>%
+  select(count_sites, total_cap)
+
+wss <- 0
+
+SponsorClusters_2018_Numeric <- do.call(data.frame, lapply(SponsorClusters_2018_Numeric, function(x) replace(x, is.infinite(x), NA)))
+SponsorClusters_2018_Numeric <- do.call(data.frame, lapply(SponsorClusters_2018_Numeric, function(x) replace(x, is.na(x), 0)))
+SponsorClusters_2018_Numeric <- do.call(data.frame, lapply(SponsorClusters_2018_Numeric, function(x) replace(x, is.nan(x), 0)))
+
+
+for (i in 1:80) {
+  km.out <- kmeans(SponsorClusters_2018_Numeric, centers = i, nstart = 20)
+  wss[i] <- km.out$tot.withinss
+}
+
+plot(1:80, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+kmean <- kmeans(SponsorClusters_2018_Numeric, 5)
+kmean$centers
+kmeansRes<-factor(kmean$cluster)
+SponsorClusters_2018_Numeric$cluster <- kmean$cluster
+
+write_xlsx(SponsorClusters_2018_Numeric,"/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/SponsorClusters_2018.xlsx")
+
+
+                                              # /*\ 2019 ANALYSIS /*\
+
+
+Count_SitesPerSponsor_2019 = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  filter(year == '2019') %>%
+  summarise(count_sites = n_distinct(name_site))
+
+
+TotalMeals_PerSponsor_2019 = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  filter(year == '2019') %>%
+  summarise(total_cap = sum(cap_all))
+
+SponsorClusters_2019 = Count_SitesPerSponsor_2019 %>%
+  inner_join(TotalMeals_PerSponsor_2019, by = "name_sponsor.x")
+
+SponsorClusters_2019_Numeric = SponsorClusters_2019 %>%
+  select(count_sites, total_cap)
+
+wss <- 0
+
+SponsorClusters_2019_Numeric <- do.call(data.frame, lapply(SponsorClusters_2019_Numeric, function(x) replace(x, is.infinite(x), NA)))
+SponsorClusters_2019_Numeric <- do.call(data.frame, lapply(SponsorClusters_2019_Numeric, function(x) replace(x, is.na(x), 0)))
+SponsorClusters_2019_Numeric <- do.call(data.frame, lapply(SponsorClusters_2019_Numeric, function(x) replace(x, is.nan(x), 0)))
+
+
+for (i in 1:80) {
+  km.out <- kmeans(SponsorClusters_2019_Numeric, centers = i, nstart = 20)
+  wss[i] <- km.out$tot.withinss
+}
+
+plot(1:80, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+kmean <- kmeans(SponsorClusters_2019_Numeric, 5)
+kmean$centers
+kmeansRes<-factor(kmean$cluster)
+SponsorClusters_2019_Numeric$cluster <- kmean$cluster
+
+write_xlsx(SponsorClusters_2019_Numeric,"/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/SponsorClusters_2019.xlsx")
+
+
+                                            # /*\ 2020 ANALYSIS /*\
+
+
+Count_SitesPerSponsor_2020 = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  filter(year == '2020') %>%
+  summarise(count_sites = n_distinct(name_site))
+
+
+TotalMeals_PerSponsor_2020 = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  filter(year == '2020') %>%
+  summarise(total_cap = sum(cap_all))
+
+SponsorClusters_2020 = Count_SitesPerSponsor_2020 %>%
+  inner_join(TotalMeals_PerSponsor_2020, by = "name_sponsor.x")
+
+SponsorClusters_2020_Numeric = SponsorClusters_2020 %>%
+  select(count_sites, total_cap)
+
+wss <- 0
+
+SponsorClusters_2020_Numeric <- do.call(data.frame, lapply(SponsorClusters_2020_Numeric, function(x) replace(x, is.infinite(x), NA)))
+SponsorClusters_2020_Numeric <- do.call(data.frame, lapply(SponsorClusters_2020_Numeric, function(x) replace(x, is.na(x), 0)))
+SponsorClusters_2020_Numeric <- do.call(data.frame, lapply(SponsorClusters_2020_Numeric, function(x) replace(x, is.nan(x), 0)))
+
+
+for (i in 1:64) {
+  km.out <- kmeans(SponsorClusters_2020_Numeric, centers = i, nstart = 20)
+  wss[i] <- km.out$tot.withinss
+}
+
+plot(1:64, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+kmean <- kmeans(SponsorClusters_2020_Numeric, 5)
+kmean$centers
+kmeansRes<-factor(kmean$cluster)
+SponsorClusters_2020_Numeric$cluster <- kmean$cluster
+
+write_xlsx(SponsorClusters_2020_Numeric,"/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/SponsorClusters_2020.xlsx")
+
+
+                                      # /*\ 2021 ANALYSIS /*\
+
+
+Count_SitesPerSponsor_2021 = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  filter(year == '2021') %>%
+  summarise(count_sites = n_distinct(name_site))
+
+
+TotalMeals_PerSponsor_2021 = SiteData %>%
+  group_by(name_sponsor.x) %>%
+  filter(year == '2021') %>%
+  summarise(total_cap = sum(cap_all))
+
+SponsorClusters_2021 = Count_SitesPerSponsor_2020 %>%
+  inner_join(TotalMeals_PerSponsor_2021, by = "name_sponsor.x")
+
+SponsorClusters_2021_Numeric = SponsorClusters_2021 %>%
+  select(count_sites, total_cap)
+
+wss <- 0
+
+SponsorClusters_2021_Numeric <- do.call(data.frame, lapply(SponsorClusters_2021_Numeric, function(x) replace(x, is.infinite(x), NA)))
+SponsorClusters_2021_Numeric <- do.call(data.frame, lapply(SponsorClusters_2021_Numeric, function(x) replace(x, is.na(x), 0)))
+SponsorClusters_2021_Numeric <- do.call(data.frame, lapply(SponsorClusters_2021_Numeric, function(x) replace(x, is.nan(x), 0)))
+
+
+for (i in 1:57) {
+  km.out <- kmeans(SponsorClusters_2021_Numeric, centers = i, nstart = 20)
+  wss[i] <- km.out$tot.withinss
+}
+
+plot(1:57, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+kmean <- kmeans(SponsorClusters_2021_Numeric, 5)
+kmean$centers
+kmeansRes<-factor(kmean$cluster)
+SponsorClusters_2021_Numeric$cluster <- kmean$cluster
+
+write_xlsx(SponsorClusters_2021_Numeric,"/Users/maustin/Desktop/Projects/Georgia DECAL Nutrition/SponsorClusters_2021.xlsx")
+
