@@ -1,0 +1,5 @@
+# Standard
+cor(df$column1, df$column2)
+
+# Ignore NAs
+cor(df$column1, df$column2, use = "complete.obs")
