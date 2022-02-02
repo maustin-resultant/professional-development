@@ -1,0 +1,1 @@
+data$x1 <- as.numeric(as.character(data$x1))
