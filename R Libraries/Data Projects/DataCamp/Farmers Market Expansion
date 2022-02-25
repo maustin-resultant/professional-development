@@ -1,5 +1,15 @@
 %%sql
 postgresql:///groceries
+    
+ALTER TABLE purchases_2020 ALTER COLUMN fulldate TYPE DATE 
+using to_date(fulldate, 'YYYY-MM-DD');
+
+
+------------------------------------------------------------
+
+
+%%sql
+postgresql:///groceries
   
 
 
@@ -39,13 +49,60 @@ MarketShare_CTE AS
         INNER JOIN Month_CTE ON Month_CTE.memberid = purchases_2020.memberid
     GROUP BY Month_CTE.month
     ORDER BY Month_CTE.month
-    )
+    ),
     
-  
+ 
 
-SELECT 
-    TotalSales_CTE.month, 
-    TotalSales_CTE.total_sales,
-    (TotalSales_CTE.total_sales/MarketShare_CTE.market_share_denom)*100::float AS market_share
+Final_MarketShare_CTE AS
+(
+    SELECT 
+        TotalSales_CTE.month, 
+        TotalSales_CTE.total_sales,
+        (CAST(TotalSales_CTE.total_sales AS FLOAT)/
+         CAST(MarketShare_CTE.market_share_denom AS FLOAT)*100) AS market_share
+    FROM TotalSales_CTE
+        INNER JOIN MarketShare_CTE ON MarketShare_CTE.month = TotalSales_CTE.month
+),
+
+
+
+YearChange_2019CTE AS
+(
+    SELECT 
+        CAST(CAST(Month_CTE.month AS INTEGER) AS VARCHAR) AS month,
+        COUNT(purchases_2019.purchase_id) AS purchases_2019
+    FROM purchases_2019
+        INNER JOIN Month_CTE ON Month_CTE.memberid = purchases_2019.member_id 
+        INNER JOIN categories ON categories.purchase_id = purchases_2019.purchase_id
+    WHERE 
+        (category = 'whole milk' OR
+         category = 'yogurt' OR
+         category = 'domestic eggs') 
+    GROUP BY Month_CTE.month
+    ORDER BY Month_CTE.month
+),
+
+
+
+Final_CTE AS
+(
+SELECT
+    CAST(TotalSales_CTE.month AS INTEGER) AS month,
+    CAST(TotalSales_CTE.total_sales AS INTEGER) AS total_sales,
+    CAST(Final_MarketShare_CTE.market_share AS NUMERIC) AS market_share,
+    ((CAST(Final_MarketShare_CTE.total_sales AS FLOAT) - 
+     CAST(YearChange_2019CTE.purchases_2019 AS FLOAT))
+     /YearChange_2019CTE.purchases_2019)*100 AS year_change
 FROM TotalSales_CTE
-     INNER JOIN MarketShare_CTE ON MarketShare_CTE.month = TotalSales_CTE.month
+    INNER JOIN Final_MarketShare_CTE ON Final_MarketShare_CTE.month = TotalSales_CTE.month
+    INNER JOIN YearChange_2019CTE ON YearChange_2019CTE.month = TotalSales_CTE.month
+)
+
+
+
+SELECT
+        month,
+        total_sales,
+        ROUND(CAST(market_share AS numeric), 2) AS market_share,
+        ROUND(CAST(year_change AS numeric), 2) AS year_change
+FROM Final_CTE
