@@ -5,6 +5,10 @@ ALTER TABLE purchases_2020 ALTER COLUMN fulldate TYPE DATE
 using to_date(fulldate, 'YYYY-MM-DD');
 
 
+ALTER TABLE purchases_2019 ALTER COLUMN full_date TYPE DATE 
+using to_date(full_date, 'YYYY-MM-DD');
+
+
 ------------------------------------------------------------
 
 
@@ -18,6 +22,15 @@ WITH Month_CTE AS
      SELECT memberid, 
         to_char(fulldate, 'MM') AS month
      FROM purchases_2020
+    ),
+    
+
+    
+Month_CTE_2019 AS
+    (
+     SELECT member_id, 
+        to_char(full_date, 'MM') AS month
+     FROM purchases_2019
     ),
 
 
@@ -69,17 +82,17 @@ Final_MarketShare_CTE AS
 YearChange_2019CTE AS
 (
     SELECT 
-        CAST(CAST(Month_CTE.month AS INTEGER) AS VARCHAR) AS month,
+        CAST(CAST(Month_CTE_2019.month AS INTEGER) AS VARCHAR) AS month,
         COUNT(DISTINCT purchases_2019.purchase_id) AS purchases_2019
     FROM purchases_2019
-        INNER JOIN Month_CTE ON Month_CTE.memberid = purchases_2019.member_id 
+        INNER JOIN Month_CTE_2019 ON Month_CTE_2019.member_id = purchases_2019.member_id 
         INNER JOIN categories ON categories.purchase_id = purchases_2019.purchase_id
     WHERE 
         (category = 'whole milk' OR
          category = 'yogurt' OR
          category = 'domestic eggs') 
-    GROUP BY Month_CTE.month
-    ORDER BY Month_CTE.month
+    GROUP BY Month_CTE_2019.month
+    ORDER BY Month_CTE_2019.month
 ),
 
 
