@@ -4,28 +4,48 @@ postgresql:///groceries
 
 
 WITH Month_CTE AS
-(
- SELECT memberid, 
+    (
+     SELECT memberid, 
         to_char(fulldate, 'MM') AS month
- FROM purchases_2020
-),
+     FROM purchases_2020
+    ),
+
+
+
+TotalSales_CTE AS
+    (
+    SELECT 
+        CAST(CAST(Month_CTE.month AS INTEGER) AS VARCHAR) AS month,
+        COUNT(purchases_2020.purchaseid) AS total_sales
+    FROM purchases_2020
+        INNER JOIN Month_CTE ON Month_CTE.memberid = purchases_2020.memberid
+        INNER JOIN categories ON categories.purchase_id = purchases_2020.purchaseid
+    WHERE 
+        (category = 'whole milk' OR
+         category = 'yogurt' OR
+         category = 'domestic eggs') 
+    GROUP BY Month_CTE.month
+    ORDER BY Month_CTE.month
+    ),
+    
+    
 
 MarketShare_CTE AS
-(
- SELECT
-        COUNT(memberid) AS total_2020_sales
- FROM purchases_2020
-)
+    (
+    SELECT 
+        CAST(CAST(Month_CTE.month AS INTEGER) AS VARCHAR) AS month,
+        COUNT(purchases_2020.purchaseid) AS market_share_denom
+    FROM purchases_2020
+        INNER JOIN Month_CTE ON Month_CTE.memberid = purchases_2020.memberid
+    GROUP BY Month_CTE.month
+    ORDER BY Month_CTE.month
+    )
+    
+  
 
 SELECT 
-    CAST(CAST(Month_CTE.month AS INTEGER) AS VARCHAR) AS month,
-    COUNT(purchases_2020.memberid) AS total_sales
-FROM purchases_2020
-    INNER JOIN Month_CTE ON Month_CTE.memberid = purchases_2020.memberid
-    INNER JOIN categories ON categories.purchase_id = purchases_2020.purchaseid
-WHERE 
-    (category = 'whole milk' OR
-     category = 'yogurt' OR
-     category = 'domestic eggs') 
-GROUP BY Month_CTE.month
-ORDER BY Month_CTE.month
+    TotalSales_CTE.month, 
+    TotalSales_CTE.total_sales,
+    (TotalSales_CTE.total_sales/MarketShare_CTE.market_share_denom)*100::float AS market_share
+FROM TotalSales_CTE
+     INNER JOIN MarketShare_CTE ON MarketShare_CTE.month = TotalSales_CTE.month
