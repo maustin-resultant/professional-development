@@ -26,7 +26,7 @@ TotalSales_CTE AS
     (
     SELECT 
         CAST(CAST(Month_CTE.month AS INTEGER) AS VARCHAR) AS month,
-        COUNT(purchases_2020.purchaseid) AS total_sales
+        COUNT(DISTINCT purchases_2020.purchaseid) AS total_sales
     FROM purchases_2020
         INNER JOIN Month_CTE ON Month_CTE.memberid = purchases_2020.memberid
         INNER JOIN categories ON categories.purchase_id = purchases_2020.purchaseid
@@ -44,7 +44,7 @@ MarketShare_CTE AS
     (
     SELECT 
         CAST(CAST(Month_CTE.month AS INTEGER) AS VARCHAR) AS month,
-        COUNT(purchases_2020.purchaseid) AS market_share_denom
+        COUNT(DISTINCT purchases_2020.purchaseid) AS market_share_denom
     FROM purchases_2020
         INNER JOIN Month_CTE ON Month_CTE.memberid = purchases_2020.memberid
     GROUP BY Month_CTE.month
@@ -70,7 +70,7 @@ YearChange_2019CTE AS
 (
     SELECT 
         CAST(CAST(Month_CTE.month AS INTEGER) AS VARCHAR) AS month,
-        COUNT(purchases_2019.purchase_id) AS purchases_2019
+        COUNT(DISTINCT purchases_2019.purchase_id) AS purchases_2019
     FROM purchases_2019
         INNER JOIN Month_CTE ON Month_CTE.memberid = purchases_2019.member_id 
         INNER JOIN categories ON categories.purchase_id = purchases_2019.purchase_id
