@@ -19,7 +19,7 @@ postgresql:///groceries
 
 WITH Month_CTE AS
     (
-     SELECT memberid, 
+     SELECT purchaseid, 
         to_char(fulldate, 'MM') AS month
      FROM purchases_2020
     ),
@@ -28,7 +28,7 @@ WITH Month_CTE AS
     
 Month_CTE_2019 AS
     (
-     SELECT member_id, 
+     SELECT purchase_id, 
         to_char(full_date, 'MM') AS month
      FROM purchases_2019
     ),
@@ -39,9 +39,9 @@ TotalSales_CTE AS
     (
     SELECT 
         CAST(CAST(Month_CTE.month AS INTEGER) AS VARCHAR) AS month,
-        COUNT(DISTINCT purchases_2020.purchaseid) AS total_sales
+        COUNT(purchases_2020.purchaseid) AS total_sales
     FROM purchases_2020
-        INNER JOIN Month_CTE ON Month_CTE.memberid = purchases_2020.memberid
+        INNER JOIN Month_CTE ON Month_CTE.purchaseid = purchases_2020.purchaseid
         INNER JOIN categories ON categories.purchase_id = purchases_2020.purchaseid
     WHERE 
         (category = 'whole milk' OR
@@ -57,9 +57,9 @@ MarketShare_CTE AS
     (
     SELECT 
         CAST(CAST(Month_CTE.month AS INTEGER) AS VARCHAR) AS month,
-        COUNT(DISTINCT purchases_2020.purchaseid) AS market_share_denom
+        COUNT(purchases_2020.purchaseid) AS market_share_denom
     FROM purchases_2020
-        INNER JOIN Month_CTE ON Month_CTE.memberid = purchases_2020.memberid
+        INNER JOIN Month_CTE ON Month_CTE.purchaseid = purchases_2020.purchaseid
     GROUP BY Month_CTE.month
     ORDER BY Month_CTE.month
     ),
@@ -83,9 +83,9 @@ YearChange_2019CTE AS
 (
     SELECT 
         CAST(CAST(Month_CTE_2019.month AS INTEGER) AS VARCHAR) AS month,
-        COUNT(DISTINCT purchases_2019.purchase_id) AS purchases_2019
+        COUNT(purchases_2019.purchase_id) AS purchases_2019
     FROM purchases_2019
-        INNER JOIN Month_CTE_2019 ON Month_CTE_2019.member_id = purchases_2019.member_id 
+        INNER JOIN Month_CTE_2019 ON Month_CTE_2019.purchase_id = purchases_2019.purchase_id 
         INNER JOIN categories ON categories.purchase_id = purchases_2019.purchase_id
     WHERE 
         (category = 'whole milk' OR
