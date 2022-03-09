@@ -1,0 +1,217 @@
+# Install and load libraries
+
+install.packages("tidyverse")
+install.packages("funModeling")
+install.packages("Hmisc")
+
+library(funModeling) 
+library(tidyverse) 
+library(Hmisc)
+library(readr)
+
+video_games <- read_csv("~/workspace/data/video_games.csv")
+
+
+
+# Basic EDA
+
+basic_eda <- function(data)
+{
+  glimpse(data)
+  print(status(data))
+  freq(data) 
+  print(profiling_num(data))
+  plot_num(data)
+  describe(data)
+}
+
+basic_eda(video_games)
+
+
+
+# Categorical EDA
+
+ggplot(data = video_games) +
+  geom_bar(mapping = aes(x = multiplayer))
+
+video_games %>% 
+  count(multiplayer)
+
+ggplot(data = video_games) +
+  geom_bar(mapping = aes(x = mature))
+
+video_games %>% 
+  count(mature)
+
+percent_singleplayer = ((29233/40833) * 100)
+percent_singleplayer
+
+percent_nonmature = ((37936/40833) * 100)
+percent_nonmature
+
+# Categorical EDA: most video games are single player and non-mature
+# Categorical EDA: 71.59% of video games are single player
+# Categorical EDA: 92.91% of video games are not rated mature
+
+
+
+# Remove infinites, NaNs, and NA values
+
+video_games <- do.call(data.frame, lapply(video_games, function(x) replace(x, is.infinite(x), NA)))
+video_games <- do.call(data.frame, lapply(video_games, function(x) replace(x, is.na(x), 0)))
+video_games <- do.call(data.frame, lapply(video_games, function(x) replace(x, is.nan(x), 0)))
+video_games <- video_games[complete.cases(video_games),]
+
+
+
+# Remove $ from original_price column, transform column to numeric
+
+video_games <- video_games %>% 
+  mutate(original_price = gsub("\\$", "", video_games$original_price))
+
+video_games$original_price <- as.numeric(video_games$original_price)
+
+video_games <- do.call(data.frame, lapply(video_games, function(x) replace(x, is.na(x), 0)))
+
+
+
+# Original Price EDA, Create Categorical Variable, EDA Visualizations
+
+video_games <- video_games %>% 
+  mutate(price_range = case_when(
+    between(original_price, 0, 19.99) ~ "$0.00 - $19.99",
+    between(original_price, 20.00, 59.99) ~ "$20.00 - $59.99",
+    between(original_price, 60.00, 179.99) ~ "$60.00 - $179.99",
+    between(original_price, 180.00, 249.99) ~ "$180.00 - $249.99",
+    between(original_price, 250.00, 419.99) ~ "$250.00 - $419.99",
+    between(original_price, 420.00, 999999999999999999999) ~ "$420.00 +",
+    TRUE ~ NA_character_
+  ))
+
+ggplot(data = video_games) +
+  geom_bar(mapping = aes(x = price_range))
+
+video_games %>% 
+  count(price_range)
+
+percent_0to20 = ((37452/40833) * 100)
+percent_0to20
+
+percent_20to60 = ((2471/40833) * 100)
+percent_20to60
+
+# Original Price EDA: most video games are under $60.00
+# Original Price EDA: 91.72% of video games are sold for $0.00 - $19.99
+# Original Price EDA: 6.05% of video games are sold for $20.00 - $59.99
+# Original Price EDA: 97.77% of video games are sold for less than $60.00
+
+
+
+# K-Means Clustering
+
+drop <- c("name","release_date", "developer", "price_range")
+video_games_clusters = video_games[,!(names(video_games) %in% drop)]
+
+video_games_clusters <- video_games_clusters %>% 
+  mutate(percent_positive = gsub("\\%", "", video_games$percent_positive))
+
+wss <- 0
+
+for (i in 1:3) {
+  km.out <- kmeans(video_games_clusters, centers = i, nstart = 20)
+  wss[i] <- km.out$tot.withinss
+}
+
+plot(1:3, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+# 2 clusters
+
+
+
+# Add clusters to _clusters df
+
+kmean <- kmeans(video_games_clusters, 2)
+kmean$centers
+kmeansRes<-factor(kmean$cluster)
+video_games_clusters$cluster <- kmean$cluster
+
+
+
+# Build the model
+
+k <- 2
+km.out <- kmeans(video_games_clusters, centers = k, nstart = 20, iter.max = 50)
+km.out
+
+options(scipen=999)
+VideoGames_Plot <- plot(video_games_clusters[, c("original_price", "num_reviews")],
+     col = km.out$cluster,
+     main = paste("k-Means Clustering of Video Game Data with", k, "Clusters"),
+     xlab = "Price", ylab = "Reviews")
+format(VideoGames_Plot, scientific = FALSE)
+VideoGames_Plot
+
+
+
+# Remove price outliers and rerun
+
+video_games_clusters <- video_games_clusters %>%
+  filter(original_price <= 999.99)
+
+k <- 2
+km.out <- kmeans(video_games_clusters, centers = k, nstart = 20, iter.max = 50)
+km.out
+
+options(scipen=999)
+VideoGames_Plot <- plot(video_games_clusters[, c("original_price", "num_reviews")],
+     col = km.out$cluster,
+     main = paste("k-Means Clustering of Video Game Data with", k, "Clusters"),
+     xlab = "Price", ylab = "Reviews")
+format(VideoGames_Plot, scientific = FALSE)
+VideoGames_Plot
+
+# Cluster 2 is most reviewed games of all time
+# Create a category for "Hall of Fame" which contains all video games from Cluster 2 with 80%  
+# positive or more
+
+
+
+# Add clusters to original df
+
+video_games <- video_games %>% 
+  mutate(percent_positive = gsub("\\%", "", video_games$percent_positive))
+
+video_games <- video_games %>%
+  filter(original_price <= 999.99)
+
+video_games <- video_games %>% mutate(id = row_number())
+video_games_clusters <- video_games_clusters %>% mutate(id = row_number())
+
+df = merge(x=video_games,y=video_games_clusters,by="id",all=TRUE)
+
+drop <- c("achievements.y","original_price.y", "percent_positive.y", "num_reviews.y", "multiplayer.y", "mature.y")
+df = df[,!(names(df) %in% drop)]
+
+
+Hall_ofFame <- df %>%
+  filter(cluster == 1) %>%
+  filter(percent_positive.x >= 80)
+
+
+
+
+# /*\ TECHNICAL REPORT /*\
+
+# The first thing I like to do with any new project I receive is determine the overarching goal. Sometimes it's easy to get lost in multiple smaller goals and expectations, so determining the overall purpose of an analysis helps me to stay focused and motivated. For Snow Cone Games's Video Game Analysis, the overall goal was to determine what categories, if any, could be created with some more unique game features, outside of the standard genre type.
+
+# After determining my ultimate goal, I moved forward with EDA. I ran a basic EDA function, which I usually like to start with, just to get an idea of what I'm working with. I examined the relevant results and then moved forward with some more targeted EDA. This targeted analysis looked at categorical data (multiplayer, mature) and price ranges -- a column I created from the original_price column to better examine our monetary variable. In order to create this column, I simply removed the '$' character from the original_price column and used a case_when to create a tiering system for the price_range variable. These price ranges are based off of my research and personal knowledge regarding standard video game price tiering structures. Most, if not all, of the popular gaming outlets offer filters for games that are $20 or less, $60 or less, so on and so forth. Thus, I applied this knowledge and research to my own tiering structure for my price_range column.
+
+# After creating the requisite column, I generated some simple statistics and bar plots on the multiplayer, mature, and price_range columns. This ultimately revealed that most (97.77%) video games that are available for purchase are under $60.00, with 91.72% of video games being sold for $0.00 - $19.99 and 6.05% of video games being sold for $20.00 - $59.99. Additionally, I found that 71.59% of available video games are single player and 92.91% of video games are not rated mature. This presented somewhat of a challenge for me in analyzing the data, as there was a pretty high degree of feature similarity among the dataframe. With this in mind, I proceeded with K-Means clustering, as this would reveal how many underlying/unidentified groups exist in the data.
+
+# In order to proceed with K-Means, I removed all non-numerical data from my dataframe and created a video_games_clusters dataframe to run the algorithm on. This ultimately revealed two groups, as determined by the elbow plot. These two groups were mostly distinguishable by their number of reviews. Cluster 1 is characterized as having 132,000 reviews or more, and Cluster 2 is characterized as having 124,000 reviews or less. I did not find any identifiable/quantifiable patterns in Cluster 2 other than its number of reviews. Because of this, I focused my attention on Cluster 1, which contained the most reviewed video games found in the dataframe. Again based on my research and independent knowledge, I know most video game sellers to have some sort of "Hall of Fame" section, where users can browse what's most popular, what's trending, etcetera. Simply having a category for "most reviewed" video games is not sufficient -- it is rare for users to browse for results by number of reviews for anything. Rather, people generally would like to see what is most popular. With this in mind, I further edited cluster 1 and limited it to only those video games which had a percent_positive of at least 80% so that users could see which video games have the best ratings and have been received the best by existing clientelle. 
+
+# After running K-Means and further editing my recommendations, I began to do some outside research on gaming and gamers. This mostly comes from an article by Forbes (https://www.forbes.com/sites/abigailtracy/2016/03/13/survey-video-games-gamers-gaming-preferences-ps4-xbox-one/?sh=53bd99af1928) which finds that 67% of gamers prefer single player games and 23% prefer multiplayer games. Because K-Means clustering only found one sufficient category to recommend, I wanted to also be able to present some additional recommendations that were optional but also kept in mind our 5 category limit. My research indicated that creating categories for single and multiplayer game types would be most sufficient, especially when compared back to our existing dataframe with relatively high feature similarity. Multiplayer offered the greatest variance among categories when compared to other categorical variables, and also helps us to tailor our website to different kinds of customers. While this may not have been identified by the algorithm itself, there is still value in recognizing that different types of customers are seeking different experiences, and making those experiences as available to them as we possibly can. 
+
+# I truly enjoyed my time working on this project and found it to be very stimulating. I am grateful to have been given the opportunity to recommend categories to Snow Cone Games and hope that those involved find my analysis to be insightful and helpful.
